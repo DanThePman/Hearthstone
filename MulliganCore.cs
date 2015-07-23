@@ -19,8 +19,14 @@ namespace SmartBotUI.Mulligan
             public static bool rampStructure { get; set; }
         }
 
+        /// <summary>
+        /// Converts mulligan card class to a board card class
+        /// </summary> 
         public class BoardCard
         {
+            /// <summary>
+            /// The resulting Card
+            /// </summary> 
             public CardTemplate Card { get; private set; }
             public bool HasEffect { get; private set; }
 
@@ -37,6 +43,9 @@ namespace SmartBotUI.Mulligan
             }
         }
 
+        /// <summary>
+        /// Class which (only) indicates if the card is a character card
+        /// </summary> 
         public class ClassCards
         {
             #region classCards
@@ -372,6 +381,9 @@ namespace SmartBotUI.Mulligan
             }
         }
 
+        /// <summary>
+        /// Class which (only) indicates if the mulligan card has a particular property
+        /// </summary> 
         public class CardProperties
         {
             public static bool HasProperty(Card card, string PropertyName)
@@ -383,6 +395,16 @@ namespace SmartBotUI.Mulligan
                     boardCard.Mechanics.Any(x => String.Equals(x,
                         property_STR, StringComparison.OrdinalIgnoreCase));
             }
+
+            public static int PropertyCount(Card card)
+            {
+                return new BoardCard(card).Card.Mechanics.Count;             
+            }
+
+            public static int PropertyCount(CardTemplate card)
+            {
+                return card.Mechanics.Count;
+            }
         }
 
         class PropertyEnumClass
@@ -391,12 +413,14 @@ namespace SmartBotUI.Mulligan
 
             public PropertyEnumClass(string EffectName)
             {
-                Property =
-                    effects.FirstOrDefault(x => x.Equals(EffectName));
+                Property = effects.Any(x => x.Equals(EffectName)) ?
+                    effects.FirstOrDefault(x => x.Equals(EffectName)) :
+                    effects[0];
             }
 
             private List<string> effects = new List<string>
             {
+                "Error_PropertyNotFoundException",
                 "Battle Cry",
                 "Buffs",
                 "Charge",
@@ -424,7 +448,110 @@ namespace SmartBotUI.Mulligan
             };
         }
 
+        /// <summary>
+        /// Class which includes the quality of a neutral minion
+        /// </summary> 
+        public class NeutralMinion
+        {
+            public CardTemplate Card { get; private set; }
+            public Value CardValue { get; private set; }
 
+            public enum Value : int
+            {
+                Bad = 0,
+                Medium = 1,
+                Good = 2,
+            }
+
+            public NeutralMinion(Card MulliganNeutralMinionCard)
+            {
+                Card = !ClassCards.IsClassCard(MulliganNeutralMinionCard) ?
+                    new BoardCard(MulliganNeutralMinionCard).Card : null;
+
+                SetCardValue();
+            }
+
+            private void SetCardValue()
+            {
+                float rawValue = (Card.Atk + Card.Health) / 2;
+                float resultingValue = rawValue - Card.Cost;
+
+                CardValue = resultingValue > 0 ? Value.Medium : Value.Bad;
+
+                if (CardProperties.PropertyCount(Card) > 0)
+                {
+                    switch (CardValue)
+                    {
+                        case Value.Bad: CardValue = Value.Medium; break;
+                        case Value.Medium: CardValue = Value.Good; break;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Class which reads the user config values
+        /// </summary> 
+        public class ValueReader
+        {
+            public static bool AttendMinionValue
+            {
+                get { return GetStringReadedValue(Lines.MinionValue).Equals("true"); }
+            }
+
+            public static int MaxManaCost
+            {
+               get { return Convert.ToInt32(GetStringReadedValue(Lines.MaxManaCost)); }
+            }
+
+            public static NeutralMinion.Value MinNeutralMinionValue
+            {
+                get
+                {
+                    switch (GetStringReadedValue(Lines.MinNeutralMinionValue).ToLower())
+                    {
+                        case "bad":
+                            return NeutralMinion.Value.Bad;
+                        case "medium":
+                            return NeutralMinion.Value.Medium;
+                        case "good":
+                            return NeutralMinion.Value.Good;
+                        default:
+                            return NeutralMinion.Value.Medium;
+                    }
+                }
+            }
+
+            public static bool AddMillhouseToBlackList
+            {
+                get { return GetStringReadedValue(Lines.AddMillhouseToBlackList).Equals("true"); }
+            }
+
+            private class Lines
+            {
+                public static int
+                MaxManaCost = 1,
+                MinNeutralMinionValue = 2,
+                AddMillhouseToBlackList = 3,
+                MinionValue = 4;
+            }
+
+            private static string GetStringReadedValue(int line)
+            {
+                string searchedLine = System.IO.File.ReadAllLines(@"C:\MulliganCore.config")
+                    [line - 1];
+
+                int startPos = searchedLine.IndexOf("=") + 1;
+                int endPos = searchedLine.Length;
+                string filteredValue = searchedLine.Substring(startPos, endPos - startPos);
+                filteredValue = filteredValue.Replace(" ", "");
+
+                return filteredValue;
+            }
+        }
+
+        List<string> whiteList = new List<string>() { "GAME_005" /*Coin*/ };
+        List<Card> chosenCards = new List<Card>();
         List<string> blackList = new List<string>();
 
         public bMulliganProfile()
@@ -435,20 +562,19 @@ namespace SmartBotUI.Mulligan
 
         public override List<Card> HandleMulligan(List<Card> Choices, CClass opponentClass, CClass ownClass)
         {
-            int MaxManaCost = 4;
+            int MaxManaCost = 4;// ValueReader.MaxManaCost;
 
-            if (ownClass == CClass.HUNTER && 
-                SettingsManager.BotMode != SettingsManager.Mode.Arena && 
-                SettingsManager.BotMode != SettingsManager.Mode.ArenaAuto)
+            if (ownClass == CClass.HUNTER &&
+            SettingsManager.BotMode != SettingsManager.Mode.Arena &&
+            SettingsManager.BotMode != SettingsManager.Mode.ArenaAuto)
             {
-                MaxManaCost = 3;
+                MaxManaCost--;
             }
 
-            List<string> whiteList = new List<string>() { "GAME_005" /*Coin*/ };
-            List<Card> chosenCards = new List<Card>();
-
+            #region ListManaging
             LoadOldBlackListEntries(opponentClass, ownClass);
-            blackList.Add("NEW1_029");//Millhouse
+            if (ValueReader.AddMillhouseToBlackList)
+                blackList.Add("NEW1_029");//Millhouse
             blackList.Add("CS2_118");//Magma Rager
             blackList.Add("EX1_132"); //Eye for an Eye
             blackList.Add("CS2_231"); //Wisp
@@ -725,7 +851,15 @@ namespace SmartBotUI.Mulligan
                     whiteList.Add("FP1_030");//Loatheb
                     break;
             }
+            #endregion ListManaging
 
+            CalculateMulligan(Choices, MaxManaCost, ownClass);
+
+            return chosenCards;
+        }
+
+        private void CalculateMulligan(List<Card> Choices, int MaxManaCost, CClass ownClass)
+        {
             foreach (var card in Choices.Where(x => !blackList.Contains(x.Name)))
             {
                 if (card.Name == "GAME_005") //Coin
@@ -744,16 +878,21 @@ namespace SmartBotUI.Mulligan
                     if (boardCard.Card.Quality == SmartBot.Plugins.API.Card.CQuality.Epic ||
                         boardCard.Card.Quality == SmartBot.Plugins.API.Card.CQuality.Legendary)
                         chosenCards.Add(card);
-                    else if (boardCard.HasEffect && ownClass != CClass.WARLOCK)
-                        chosenCards.Add(card);
                     else if (boardCard.Card.Cost <= 2)
-                    {
                         chosenCards.Add(card);
+                    else if (boardCard.HasEffect &&
+                        boardCard.Card.Cost >= 3 && ownClass != CClass.WARLOCK)
+                    {
+                        var minionCard = new NeutralMinion(card);
+
+                        if (minionCard.CardValue >= ValueReader.MinNeutralMinionValue &&
+                            ValueReader.AttendMinionValue)
+                            chosenCards.Add(card);
+                        else if (!ValueReader.AttendMinionValue)
+                            chosenCards.Add(card);
                     }
                 }
             }
-
-            return chosenCards;
         }
 
         private void LoadOldBlackListEntries(CClass opponentClass, CClass myClass)
