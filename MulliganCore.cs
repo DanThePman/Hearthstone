@@ -494,9 +494,36 @@ namespace SmartBotUI.Mulligan
         /// </summary> 
         public class ValueReader
         {
+            private class Lines
+            {
+                public static int
+                MaxManaCost = 1,
+                MinNeutralMinionValue = 2,
+                MinManaCostToAttendValue = 3,
+                AttendMinionValueBool = 4,
+                AddMillhouseToBlackList = 5,
+                MaxManaToInstantAddNeutralMinion = 6,
+                OnlyAddMinionIfHasEffect = 7;
+            }
+
+            public static bool OnlyAddMinionIfHasEffect
+            {
+                get { return GetStringReadedValue(Lines.OnlyAddMinionIfHasEffect).Equals("true"); }
+            }
+
+            public static int MaxManaToInstantAddNeutralMinion
+            {
+                get { return Convert.ToInt32(GetStringReadedValue(Lines.MaxManaToInstantAddNeutralMinion)); }
+            }
+
+            public static int MinManaCostToAttendValue
+            {
+                get { return Convert.ToInt32(GetStringReadedValue(Lines.MinManaCostToAttendValue)); }
+            }
+
             public static bool AttendMinionValue
             {
-                get { return GetStringReadedValue(Lines.MinionValue).Equals("true"); }
+                get { return GetStringReadedValue(Lines.AttendMinionValueBool).Equals("true"); }
             }
 
             public static int MaxManaCost
@@ -525,15 +552,6 @@ namespace SmartBotUI.Mulligan
             public static bool AddMillhouseToBlackList
             {
                 get { return GetStringReadedValue(Lines.AddMillhouseToBlackList).Equals("true"); }
-            }
-
-            private class Lines
-            {
-                public static int
-                MaxManaCost = 1,
-                MinNeutralMinionValue = 2,
-                AddMillhouseToBlackList = 3,
-                MinionValue = 4;
             }
 
             private static string GetStringReadedValue(int line)
@@ -878,19 +896,22 @@ namespace SmartBotUI.Mulligan
                     if (boardCard.Card.Quality == SmartBot.Plugins.API.Card.CQuality.Epic ||
                         boardCard.Card.Quality == SmartBot.Plugins.API.Card.CQuality.Legendary)
                         chosenCards.Add(card);
-                    else if (boardCard.Card.Cost <= 2)
+                    else if (boardCard.Card.Cost <= ValueReader.MaxManaToInstantAddNeutralMinion)
                         chosenCards.Add(card);
-                    else if (boardCard.HasEffect &&
-                        boardCard.Card.Cost >= 3 && ownClass != CClass.WARLOCK)
+                    else if (boardCard.Card.Cost >= ValueReader.MinManaCostToAttendValue && ownClass != CClass.WARLOCK
+                        && ValueReader.AttendMinionValue)
                     {
-                        var minionCard = new NeutralMinion(card);
+                        if ((ValueReader.OnlyAddMinionIfHasEffect && boardCard.HasEffect) || 
+                            !ValueReader.OnlyAddMinionIfHasEffect)
+                        {
+                            var minionCard = new NeutralMinion(card);
 
-                        if (minionCard.CardValue >= ValueReader.MinNeutralMinionValue &&
-                            ValueReader.AttendMinionValue)
-                            chosenCards.Add(card);
-                        else if (!ValueReader.AttendMinionValue)
-                            chosenCards.Add(card);
+                            if (minionCard.CardValue >= ValueReader.MinNeutralMinionValue)
+                                chosenCards.Add(card);
+                        }
                     }
+                    else if (!ValueReader.AttendMinionValue)
+                        chosenCards.Add(card);
                 }
             }
         }
