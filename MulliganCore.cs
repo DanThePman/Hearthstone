@@ -735,7 +735,7 @@ namespace SmartBotUI.Mulligan
                     if (boardCard.Card.Quality == SmartBot.Plugins.API.Card.CQuality.Epic ||
                         boardCard.Card.Quality == SmartBot.Plugins.API.Card.CQuality.Legendary)
                         chosenCards.Add(card);
-                    else if (boardCard.HasEffect)
+                    else if (boardCard.HasEffect && ownClass != CClass.WARLOCK)
                         chosenCards.Add(card);
                     else if (boardCard.Card.Cost <= 2)
                     {
