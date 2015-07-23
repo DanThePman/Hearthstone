@@ -435,6 +435,15 @@ namespace SmartBotUI.Mulligan
 
         public override List<Card> HandleMulligan(List<Card> Choices, CClass opponentClass, CClass ownClass)
         {
+            int MaxManaCost = 4;
+
+            if (ownClass == CClass.HUNTER && 
+                SettingsManager.BotMode != SettingsManager.Mode.Arena && 
+                SettingsManager.BotMode != SettingsManager.Mode.ArenaAuto)
+            {
+                MaxManaCost = 3;
+            }
+
             List<string> whiteList = new List<string>() { "GAME_005" /*Coin*/ };
             List<Card> chosenCards = new List<Card>();
 
@@ -728,7 +737,7 @@ namespace SmartBotUI.Mulligan
 
                 if (whiteList.Contains(card.Name))
                     chosenCards.Add(card);
-                else if (!ClassCards.IsClassCard(card) && card.Cost <= 3)
+                else if (!ClassCards.IsClassCard(card) && card.Cost <= MaxManaCost)
                 {
                     var boardCard = new BoardCard(card);
 
