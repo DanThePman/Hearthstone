@@ -497,13 +497,36 @@ namespace SmartBotUI.Mulligan
             private class Lines
             {
                 public static int
-                MaxManaCost = 1,
-                MinNeutralMinionValue = 2,
-                MinManaCostToAttendValue = 3,
-                AttendMinionValueBool = 4,
-                AddMillhouseToBlackList = 5,
-                MaxManaToInstantAddNeutralMinion = 6,
-                OnlyAddMinionIfHasEffect = 7;
+                MaxManaCost = 3,
+                MinNeutralMinionValue = 9,
+                MinManaCostToAttendValue = 8,
+                AttendMinionValueBool = 7,
+                AddMillhouseToBlackList = 16,
+                MaxManaToInstantAddNeutralMinion = 20,
+                OnlyAddMinionIfHasEffect = 21,
+                MinCardQualityToInstantAddMinion = 22;
+            }
+
+            public static SmartBot.Plugins.API.Card.CQuality MinCardQualityToInstantAddMinion
+            {
+                get
+                {
+                    switch (GetStringReadedValue(Lines.MinCardQualityToInstantAddMinion).ToLower())
+                    {
+                        case "free":
+                            return SmartBot.Plugins.API.Card.CQuality.Free;
+                        case "common":
+                            return SmartBot.Plugins.API.Card.CQuality.Common;
+                        case "rare":
+                            return SmartBot.Plugins.API.Card.CQuality.Rare;
+                        case "epic":
+                            return SmartBot.Plugins.API.Card.CQuality.Epic;
+                        case "legendary":
+                            return SmartBot.Plugins.API.Card.CQuality.Legendary;
+                        default:
+                            return SmartBot.Plugins.API.Card.CQuality.Epic;
+                    }
+                }
             }
 
             public static bool OnlyAddMinionIfHasEffect
@@ -560,7 +583,7 @@ namespace SmartBotUI.Mulligan
                     @"\MulliganProfiles\MulliganCore.config")
                         [line - 1];
 
-                int startPos = searchedLine.IndexOf("=") + 1;
+                int startPos = searchedLine.LastIndexOf("=") + 1;
                 int endPos = searchedLine.Length;
                 string filteredValue = searchedLine.Substring(startPos, endPos - startPos);
                 filteredValue = filteredValue.Replace(" ", "");
@@ -894,8 +917,7 @@ namespace SmartBotUI.Mulligan
                 {
                     var boardCard = new BoardCard(card);
 
-                    if (boardCard.Card.Quality == SmartBot.Plugins.API.Card.CQuality.Epic ||
-                        boardCard.Card.Quality == SmartBot.Plugins.API.Card.CQuality.Legendary)
+                    if (boardCard.Card.Quality >= ValueReader.MinCardQualityToInstantAddMinion)
                         chosenCards.Add(card);
                     else if (boardCard.Card.Cost <= ValueReader.MaxManaToInstantAddNeutralMinion)
                         chosenCards.Add(card);
