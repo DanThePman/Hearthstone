@@ -498,13 +498,14 @@ namespace SmartBotUI.Mulligan
             {
                 public static int
                 MaxManaCost = 3,
-                MinNeutralMinionValue = 9,
-                MinManaCostToAttendValue = 8,
-                AttendMinionValueBool = 7,
-                AddMillhouseToBlackList = 16,
-                MaxManaToInstantAddNeutralMinion = 20,
-                OnlyAddMinionIfHasEffect = 21,
-                MinCardQualityToInstantAddMinion = 22;
+                MaxManaCostWarlockAndHunter = 4,
+                MinNeutralMinionValue = 10,
+                MinManaCostToAttendValue = 9,
+                AttendMinionValueBool = 8,
+                AddMillhouseToBlackList = 17,
+                MaxManaToInstantAddNeutralMinion = 21,
+                OnlyAddMinionIfHasEffect = 22,
+                MinCardQualityToInstantAddMinion = 23;
             }
 
             public static SmartBot.Plugins.API.Card.CQuality MinCardQualityToInstantAddMinion
@@ -552,6 +553,11 @@ namespace SmartBotUI.Mulligan
             public static int MaxManaCost
             {
                get { return Convert.ToInt32(GetStringReadedValue(Lines.MaxManaCost)); }
+            }
+
+            public static int MaxManaCostWarlockAndHunter
+            {
+                get { return Convert.ToInt32(GetStringReadedValue(Lines.MaxManaCostWarlockAndHunter)); }
             }
 
             public static NeutralMinion.Value MinNeutralMinionValue
@@ -604,13 +610,13 @@ namespace SmartBotUI.Mulligan
 
         public override List<Card> HandleMulligan(List<Card> Choices, CClass opponentClass, CClass ownClass)
         {
-            int MaxManaCost = 4;// ValueReader.MaxManaCost;
+            int MaxManaCost = ValueReader.MaxManaCost;
 
-            if (ownClass == CClass.HUNTER &&
+            if ((ownClass == CClass.HUNTER || ownClass == CClass.WARLOCK) &&
             SettingsManager.BotMode != SettingsManager.Mode.Arena &&
             SettingsManager.BotMode != SettingsManager.Mode.ArenaAuto)
             {
-                MaxManaCost--;
+                MaxManaCost = ValueReader.MaxManaCostWarlockAndHunter;
             }
 
             #region ListManaging
@@ -921,7 +927,7 @@ namespace SmartBotUI.Mulligan
                         chosenCards.Add(card);
                     else if (boardCard.Card.Cost <= ValueReader.MaxManaToInstantAddNeutralMinion)
                         chosenCards.Add(card);
-                    else if (boardCard.Card.Cost >= ValueReader.MinManaCostToAttendValue && ownClass != CClass.WARLOCK
+                    else if (boardCard.Card.Cost >= ValueReader.MinManaCostToAttendValue
                         && ValueReader.AttendMinionValue)
                     {
                         if ((ValueReader.OnlyAddMinionIfHasEffect && boardCard.HasEffect) || 
