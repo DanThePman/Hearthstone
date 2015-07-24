@@ -556,7 +556,7 @@ namespace SmartBotUI.Mulligan
 
             private static string GetStringReadedValue(int line)
             {
-                string searchedLine = System.IO.File.ReadAllLines(Environment.CurrentDirectory + @"\MulliganCore.config")
+                string searchedLine = System.IO.File.ReadAllLines(@"C:\MulliganCore.config")
                     [line - 1];
 
                 int startPos = searchedLine.IndexOf("=") + 1;
