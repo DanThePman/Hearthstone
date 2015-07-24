@@ -505,7 +505,9 @@ namespace SmartBotUI.Mulligan
                 AddMillhouseToBlackList = 17,
                 MaxManaToInstantAddNeutralMinion = 21,
                 OnlyAddMinionIfHasEffect = 22,
-                MinCardQualityToInstantAddMinion = 23;
+                MinCardQualityToInstantAddMinion = 23,
+                AllowTwinsBool = 32,
+                DontAllowTwinsIfManaCostAtLeast = 33;
             }
 
             public static SmartBot.Plugins.API.Card.CQuality MinCardQualityToInstantAddMinion
@@ -528,6 +530,16 @@ namespace SmartBotUI.Mulligan
                             return SmartBot.Plugins.API.Card.CQuality.Epic;
                     }
                 }
+            }
+
+            public static bool AllowTwins
+            {
+                get { return GetStringReadedValue(Lines.AllowTwinsBool).Equals("true"); }
+            }
+
+            public static int DontAllowTwinsIfManaCostAtLeast
+            {
+                get { return Convert.ToInt32(GetStringReadedValue(Lines.DontAllowTwinsIfManaCostAtLeast)); }
             }
 
             public static bool OnlyAddMinionIfHasEffect
@@ -908,6 +920,26 @@ namespace SmartBotUI.Mulligan
 
         private void CalculateMulligan(List<Card> Choices, int MaxManaCost, CClass ownClass)
         {
+            #region TwinManaging
+            for (int i = 0; i < Choices.Count; i++)
+            {
+                for (int j = 0; j < Choices.Count; j++)
+                {
+                    if (i != j && Choices[i].Name.Equals(Choices[j].Name))
+                    {
+                        if (Choices[i].Cost < ValueReader.DontAllowTwinsIfManaCostAtLeast &&
+                            ValueReader.AllowTwins)
+                            continue;
+                        else if (!ValueReader.AllowTwins || Choices[i].Cost >= ValueReader.DontAllowTwinsIfManaCostAtLeast)
+                        {
+                            chosenCards.Add(Choices[i]);
+                            blackList.Add(Choices[i].Name);
+                        }
+                    }
+                }
+            }
+            #endregion TwinManaging
+
             foreach (var card in Choices.Where(x => !blackList.Contains(x.Name)))
             {
                 if (card.Name == "GAME_005") //Coin
@@ -930,7 +962,7 @@ namespace SmartBotUI.Mulligan
                     else if (boardCard.Card.Cost >= ValueReader.MinManaCostToAttendValue
                         && ValueReader.AttendMinionValue)
                     {
-                        if ((ValueReader.OnlyAddMinionIfHasEffect && boardCard.HasEffect) || 
+                        if ((ValueReader.OnlyAddMinionIfHasEffect && boardCard.HasEffect) ||
                             !ValueReader.OnlyAddMinionIfHasEffect)
                         {
                             var minionCard = new NeutralMinion(card);
