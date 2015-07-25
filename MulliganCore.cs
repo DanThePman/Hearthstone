@@ -27,14 +27,18 @@ namespace SmartBotUI.Mulligan
             /// <summary>
             /// The resulting Card
             /// </summary> 
-            public CardTemplate Card { get; private set; }
+            public CardTemplate ResultingBoardCard { get; private set; }
             public bool HasEffect { get; private set; }
+            public int EffectCount { get; private set; }
+            public bool IsMaxManaCard { get; private set; }
 
             public BoardCard(Card MulliganCard)
             {
-                Card = ConvertToBoardCard(MulliganCard);
+                ResultingBoardCard = ConvertToBoardCard(MulliganCard);
 
-                HasEffect = Card.Mechanics.Count > 0;
+                HasEffect = ResultingBoardCard.Mechanics.Count > 0;
+                EffectCount = ResultingBoardCard.Mechanics.Count;
+                IsMaxManaCard = MulliganCard.Cost == ValueReader.MaxManaCost;
             }
 
             private CardTemplate ConvertToBoardCard(Card MulliganCard)
@@ -386,24 +390,66 @@ namespace SmartBotUI.Mulligan
         /// </summary> 
         public class CardProperties
         {
-            public static bool HasProperty(Card card, string PropertyName)
+            public static bool HasEffect(Card card, string PropertyName)
             {
                 string property_STR = new PropertyEnumClass(PropertyName).Property;
-                var boardCard = new BoardCard(card).Card;
+                var boardCard = new BoardCard(card).ResultingBoardCard;
+
+                return
+                    boardCard.Mechanics.Any(x => String.Equals(x,
+                        property_STR, StringComparison.OrdinalIgnoreCase));
+            }
+            /// <summary>
+            /// For board cards
+            /// </summary> 
+            public static bool HasEffect(CardTemplate card, string PropertyName)
+            {
+                string property_STR = new PropertyEnumClass(PropertyName).Property;
+                var boardCard = card;
 
                 return
                     boardCard.Mechanics.Any(x => String.Equals(x,
                         property_STR, StringComparison.OrdinalIgnoreCase));
             }
 
-            public static int PropertyCount(Card card)
+            public static bool HasBadEffect(CardTemplate card)
             {
-                return new BoardCard(card).Card.Mechanics.Count;             
+                /// <summary>
+                /// Some cards will be added to hand anyway because of other aspects
+                /// </summary>
+                List<string> CardsWithBadProperties = new List<string>
+                {
+                    "EX1_577",//The Beast
+                    "CS2_227",//Venture Co. Mercenary
+                    "EX1_045",//Ancient Watcher
+                    "NEW1_030",//Deathwing
+                    "FP1_001",//Zombie Chow
+                    "TU4c_001",//King Mukla
+                };
+
+                return HasEffect(card, "Damage All") ||
+                    HasEffect(card, "Overload") ||
+                    CardsWithBadProperties.Contains(card.Name);
             }
 
-            public static int PropertyCount(CardTemplate card)
+            public static bool HasBadEffect(Card card)
             {
-                return card.Mechanics.Count;
+                /// <summary>
+                /// Some cards will be added to hand anyway because of other aspects
+                /// </summary>
+                List<string> CardsWithBadProperties = new List<string>
+                {
+                    "EX1_577",//The Beast
+                    "CS2_227",//Venture Co. Mercenary
+                    "EX1_045",//Ancient Watcher
+                    "NEW1_030",//Deathwing
+                    "FP1_001",//Zombie Chow
+                    "TU4c_001",//King Mukla
+                };
+
+                return HasEffect(card, "Damage All") ||
+                    HasEffect(card, "Overload") ||
+                    CardsWithBadProperties.Contains(card.Name);
             }
         }
 
@@ -453,7 +499,7 @@ namespace SmartBotUI.Mulligan
         /// </summary> 
         public class NeutralMinion
         {
-            public CardTemplate Card { get; private set; }
+            public BoardCard BoardCard { get; private set; }
             public Value CardValue { get; private set; }
 
             public enum Value : int
@@ -461,31 +507,38 @@ namespace SmartBotUI.Mulligan
                 Bad = 0,
                 Medium = 1,
                 Good = 2,
+                Excellent = 3
             }
 
             public NeutralMinion(Card MulliganNeutralMinionCard)
             {
-                Card = !ClassCards.IsClassCard(MulliganNeutralMinionCard) ?
-                    new BoardCard(MulliganNeutralMinionCard).Card : null;
+                BoardCard = !ClassCards.IsClassCard(MulliganNeutralMinionCard) ?
+                    new BoardCard(MulliganNeutralMinionCard) : null;
 
-                SetCardValue();
+                if (BoardCard != null)
+                    SetCardValue();
+                else
+                    CardValue = Value.Bad;
             }
 
             private void SetCardValue()
             {
-                float rawValue = (Card.Atk + Card.Health) / 2;
-                float resultingValue = rawValue - Card.Cost;
+                float rawValue = (BoardCard.ResultingBoardCard.Atk + BoardCard.ResultingBoardCard.Health) / 2;
+                float resultingValue = rawValue - BoardCard.ResultingBoardCard.Cost;
 
-                CardValue = resultingValue > 0 ? Value.Medium : Value.Bad;
+                CardValue = resultingValue > 0 ? Value.Good : Value.Medium;
 
-                if (CardProperties.PropertyCount(Card) > 0)
+                if (CardProperties.HasBadEffect(BoardCard.ResultingBoardCard))
                 {
                     switch (CardValue)
                     {
-                        case Value.Bad: CardValue = Value.Medium; break;
-                        case Value.Medium: CardValue = Value.Good; break;
+                        case Value.Medium: CardValue = Value.Bad; break;
+                        case Value.Good: CardValue = Value.Medium; break;
                     }
                 }
+
+                CardValue = BoardCard.EffectCount > 0 && CardValue == Value.Good ? Value.Excellent :
+                    CardValue;
             }
         }
 
@@ -494,20 +547,34 @@ namespace SmartBotUI.Mulligan
         /// </summary> 
         public class ValueReader
         {
-            private class Lines
+            public class Lines
             {
                 public static int
                 MaxManaCost = 3,
                 MaxManaCostWarlockAndHunter = 4,
-                MinNeutralMinionValue = 10,
-                MinManaCostToAttendValue = 9,
+
+
                 AttendMinionValueBool = 8,
-                AddMillhouseToBlackList = 17,
-                MaxManaToInstantAddNeutralMinion = 21,
-                OnlyAddMinionIfHasEffect = 22,
-                MinCardQualityToInstantAddMinion = 23,
-                AllowTwinsBool = 32,
-                DontAllowTwinsIfManaCostAtLeast = 33;
+                MinManaCostToAttendValue = 9,
+                MinNeutralMinionValue = 10,
+                IncreaseMinMinionValueIfMaxCostBool = 15,
+                IgnoreValueIfCardIsX_DropEtcBool = 17,
+                    X_Drop = 18,
+                    Y_Drop = 19,
+                    Z_Drop = 20,
+                MakeIgnoringOnlyIfNotBadPropertyBool = 21,
+
+
+                AddMillhouseToBlackList = 25,
+
+
+                MaxManaToInstantAddNeutralMinion = 29,
+                OnlyAddMinionIfHasEffect = 30,
+                MinCardQualityToInstantAddMinion = 31,
+
+
+                AllowTwinsBool = 40,
+                DontAllowTwinsIfManaCostAtLeast = 41;
             }
 
             public static SmartBot.Plugins.API.Card.CQuality MinCardQualityToInstantAddMinion
@@ -530,6 +597,29 @@ namespace SmartBotUI.Mulligan
                             return SmartBot.Plugins.API.Card.CQuality.Epic;
                     }
                 }
+            }
+
+            public class ValueIgnorer
+            {
+                public static bool IgnoreValueIfCardIsX_DropEtc
+                {
+                    get { return GetStringReadedValue(Lines.IgnoreValueIfCardIsX_DropEtcBool).Equals("true"); }
+                }
+
+                public static int GetDrop(int DropLine)
+                {
+                    return Convert.ToInt32(GetStringReadedValue(DropLine));
+                }
+
+                public static bool MakeIgnoringOnlyIfNotBadEffect
+                {
+                    get { return GetStringReadedValue(Lines.MakeIgnoringOnlyIfNotBadPropertyBool).Equals("true"); }
+                }
+            }
+
+            public static bool IncreaseMinMinionValueIfMaxCost
+            {
+                get { return GetStringReadedValue(Lines.IncreaseMinMinionValueIfMaxCostBool).Equals("true"); }
             }
 
             public static bool AllowTwins
@@ -584,8 +674,28 @@ namespace SmartBotUI.Mulligan
                             return NeutralMinion.Value.Medium;
                         case "good":
                             return NeutralMinion.Value.Good;
+                        case "excellent":
+                            return NeutralMinion.Value.Excellent;
                         default:
                             return NeutralMinion.Value.Medium;
+                    }
+                }
+            }
+
+            public static NeutralMinion.Value IncreasedMinNeutralMinionValue
+            {
+                get
+                {
+                    switch (MinNeutralMinionValue)
+                    {
+                        case NeutralMinion.Value.Bad:
+                            return NeutralMinion.Value.Medium;
+                        case NeutralMinion.Value.Medium:
+                            return NeutralMinion.Value.Good;
+                        case NeutralMinion.Value.Good:
+                            return NeutralMinion.Value.Excellent;
+                        default:
+                            return NeutralMinion.Value.Excellent;
                     }
                 }
             }
@@ -642,7 +752,7 @@ namespace SmartBotUI.Mulligan
             {
                 case CClass.DRUID:
                     blackList.Add("CS2_012");//Swipe
-                    if (Choices.Count(x => new BoardCard(x).Card.Type == CType.MINION) >= 2)
+                    if (Choices.Count(x => new BoardCard(x).ResultingBoardCard.Type == CType.MINION) >= 2)
                         blackList.Add("CS2_011");//Savage Roar
                     whiteList.Add("EX1_169");//Innervate
                     whiteList.Add("EX1_154");//Wrath
@@ -657,18 +767,18 @@ namespace SmartBotUI.Mulligan
                         whiteList.Add("GVG_096");//Piloted Shredder
                     }
                     whiteList.Add("CS2_013");//Wild Growth
-                    if (Choices.Any(x => CardProperties.HasProperty(x, "Taunt")
+                    if (Choices.Any(x => CardProperties.HasEffect(x, "Taunt")
                         && x.Name != "FP1_028" && x.Cost <= 3))
                     {
                         whiteList.Add("FP1_028");//Undertaker
-                        whiteList.Add(Choices.FirstOrDefault(x => CardProperties.HasProperty(x, "Deathrattle")
+                        whiteList.Add(Choices.FirstOrDefault(x => CardProperties.HasEffect(x, "Deathrattle")
                             && x.Name != "FP1_028" && x.Cost <= 3).Name);
                     }
-                    if (Choices.Count(x => CardProperties.HasProperty(x, "Deathrattle")) < 
+                    if (Choices.Count(x => CardProperties.HasEffect(x, "Deathrattle")) < 
                         Choices.Count(x => x.Name != whiteList[0]))
                         whiteList.Add("CS2_009");//Mark of the Wild
                     whiteList.Add("CS2_005");//Claw
-                    if (Choices.Any(x => new BoardCard(x).Card.Type == CType.WEAPON 
+                    if (Choices.Any(x => new BoardCard(x).ResultingBoardCard.Type == CType.WEAPON 
                         || x.Name == "CS2_005"))
                         whiteList.Add("EX1_578");//Savagery
                     else
@@ -677,23 +787,23 @@ namespace SmartBotUI.Mulligan
                 case CClass.HUNTER:
                     whiteList.Add("NEW1_031");//Animal Companion
                     whiteList.Add("EX1_617");//Deadly Shot
-                    if (Choices.Count(x => new BoardCard(x).Card.Type == CType.MINION
+                    if (Choices.Count(x => new BoardCard(x).ResultingBoardCard.Type == CType.MINION
                         && !blackList.Contains(x.Name)) >= 2)
                         whiteList.Add("EX1_611");//Freezing Trap
                     else
                         blackList.Add("EX1_611");//Freezing Trap
-                    if (!Choices.Any(x => CardProperties.HasProperty(x, "Stealth")))
+                    if (!Choices.Any(x => CardProperties.HasEffect(x, "Stealth")))
                         whiteList.Add("EX1_544");//Flare
                     else
                         blackList.Add("EX1_544");//Flare
 
-                    if (Choices.Count(x => CardProperties.HasProperty(x, "Deathrattle")) >= 2)
+                    if (Choices.Count(x => CardProperties.HasEffect(x, "Deathrattle")) >= 2)
                         whiteList.Add("GVG_026");//Feign Death
                     else
                         blackList.Add("GVG_026");//Feign Death
 
-                    if (Choices.Count(x => new BoardCard(x).Card.Type == CType.MINION
-                        && new BoardCard(x).Card.Race == SmartBot.Plugins.API.Card.CRace.BEAST &&
+                    if (Choices.Count(x => new BoardCard(x).ResultingBoardCard.Type == CType.MINION
+                        && new BoardCard(x).ResultingBoardCard.Race == SmartBot.Plugins.API.Card.CRace.BEAST &&
                         !blackList.Contains(x.Name)) >= 3)
                         whiteList.Add("DS1_175");//Timber Wolf
                     else
@@ -734,7 +844,7 @@ namespace SmartBotUI.Mulligan
                     whiteList.Add("EX1_339");//Thoughtsteal
                     whiteList.Add("GVG_072");//Shadowboxer
                     whiteList.Add("CS2_234");//Shadow Word: Pain
-                    if (Choices.Any(x => new BoardCard(x).Card.Type == CType.MINION 
+                    if (Choices.Any(x => new BoardCard(x).ResultingBoardCard.Type == CType.MINION 
                         && x.Cost <= 3 && !blackList.Contains(x.Name)))
                         whiteList.Add("CS2_236");//Divine Spirit
                     else
@@ -773,14 +883,14 @@ namespace SmartBotUI.Mulligan
                     }
                     break;
                 case CClass.ROGUE:
-                    if (Choices.Any(x => x.Cost <= 1 && (new BoardCard(x).Card.Type == CType.SPELL 
-                        || new BoardCard(x).Card.Type == CType.WEAPON)) &&
+                    if (Choices.Any(x => x.Cost <= 1 && (new BoardCard(x).ResultingBoardCard.Type == CType.SPELL 
+                        || new BoardCard(x).ResultingBoardCard.Type == CType.WEAPON)) &&
                         !Choices.Any(x => x.Name == "EX1_131"))
                         whiteList.Add("EX1_134"); //SI:7-Agent
                     whiteList.Add("EX1_129"); //Dolchfächer
                     whiteList.Add("EX1_126"); //Verrat
-                    if (Choices.Any(x => x.Cost <= 1 && (new BoardCard(x).Card.Type == CType.SPELL
-                        || new BoardCard(x).Card.Type == CType.WEAPON)))
+                    if (Choices.Any(x => x.Cost <= 1 && (new BoardCard(x).ResultingBoardCard.Type == CType.SPELL
+                        || new BoardCard(x).ResultingBoardCard.Type == CType.WEAPON)))
                     whiteList.Add("EX1_131"); //Rädelsführer der Defias
                     whiteList.Add("GVG_023"); //Goblinbarbier-o-Mat
                     whiteList.Add("EX1_522"); //Geduldiger Attentäter
@@ -823,10 +933,10 @@ namespace SmartBotUI.Mulligan
                     whiteList.Add("CS2_059");//Blood Imp
                     break;
                 case CClass.WARRIOR:
-                    if (Choices.Any(x => new BoardCard(x).Card.Type == CType.MINION))
+                    if (Choices.Any(x => new BoardCard(x).ResultingBoardCard.Type == CType.MINION))
                         whiteList.Add("EX1_402");//Armorsmith
-                    if (Choices.Any(x => new BoardCard(x).Card.Type == CType.MINION && 
-                        new BoardCard(x).Card.Health > 1))
+                    if (Choices.Any(x => new BoardCard(x).ResultingBoardCard.Type == CType.MINION && 
+                        new BoardCard(x).ResultingBoardCard.Health > 1))
                         whiteList.Add("CS2_104");//Rampage
                     if (Choices.Any(x => x.Name == "EX1_007" || x.Name == "EX1_393"))
                         whiteList.Add("EX1_607"); //Inner Rage
@@ -875,7 +985,7 @@ namespace SmartBotUI.Mulligan
                     whiteList.Add("NEW1_036");//Commanding Shout
                     whiteList.Add("CS2_114");//Cleave
                     whiteList.Add("GVG_051");//Warbot
-                    if (Choices.Any(x => new BoardCard(x).Card.Type == CType.WEAPON))
+                    if (Choices.Any(x => new BoardCard(x).ResultingBoardCard.Type == CType.WEAPON))
                         whiteList.Add("EX1_409");//Upgrade!
                     whiteList.Add("EX1_410");//Shield Slam
                     whiteList.Add("CS2_108");//Execute
@@ -951,27 +1061,58 @@ namespace SmartBotUI.Mulligan
                 if (whiteList.Contains(card.Name))
                     chosenCards.Add(card);
                 else if (!ClassCards.IsClassCard(card) && card.Cost <= MaxManaCost)
+                    ManageNeutralMinion(card, MaxManaCost, Choices);
+            }
+        }
+
+        private void ManageNeutralMinion(Card card, int maxMana, List<Card> HandCards)
+        {
+            //<= max mana
+            var boardCard = new BoardCard(card);
+
+            if (boardCard.ResultingBoardCard.Quality >= ValueReader.MinCardQualityToInstantAddMinion) //epic by default
+                chosenCards.Add(card);
+            else if (boardCard.ResultingBoardCard.Cost <= ValueReader.MaxManaToInstantAddNeutralMinion) // min insta add cost
+                chosenCards.Add(card);
+            else
+            { //card quality not hight enough and mana to high too
+                if (!ValueReader.AttendMinionValue)
+                    chosenCards.Add(card);
+                else if (boardCard.ResultingBoardCard.Cost >= ValueReader.MinManaCostToAttendValue)
                 {
-                    var boardCard = new BoardCard(card);
-
-                    if (boardCard.Card.Quality >= ValueReader.MinCardQualityToInstantAddMinion)
-                        chosenCards.Add(card);
-                    else if (boardCard.Card.Cost <= ValueReader.MaxManaToInstantAddNeutralMinion)
-                        chosenCards.Add(card);
-                    else if (boardCard.Card.Cost >= ValueReader.MinManaCostToAttendValue
-                        && ValueReader.AttendMinionValue)
+                    if ((ValueReader.OnlyAddMinionIfHasEffect && boardCard.HasEffect) ||
+                        !ValueReader.OnlyAddMinionIfHasEffect)
                     {
-                        if ((ValueReader.OnlyAddMinionIfHasEffect && boardCard.HasEffect) ||
-                            !ValueReader.OnlyAddMinionIfHasEffect)
-                        {
-                            var minionCard = new NeutralMinion(card);
+                        var minionCard = new NeutralMinion(card);
+                        NeutralMinion.Value resultingMinNeutralMinionValue =
+                            minionCard.BoardCard.IsMaxManaCard && ValueReader.IncreaseMinMinionValueIfMaxCost
+                            ?
+                            ValueReader.IncreasedMinNeutralMinionValue
+                            :
+                            ValueReader.MinNeutralMinionValue;
 
-                            if (minionCard.CardValue >= ValueReader.MinNeutralMinionValue)
+                        int X_Config_Drop = ValueReader.ValueIgnorer.GetDrop(ValueReader.Lines.X_Drop);
+                        int Y_Config_Drop = ValueReader.ValueIgnorer.GetDrop(ValueReader.Lines.Y_Drop);
+                        int Z_Config_Drop = ValueReader.ValueIgnorer.GetDrop(ValueReader.Lines.Z_Drop);
+
+
+                        if (minionCard.CardValue >= resultingMinNeutralMinionValue)
+                            chosenCards.Add(card);
+                        else if (card.Cost == X_Config_Drop &&
+                            HandCards.Count(x => new NeutralMinion(x).BoardCard != null && x.Cost == Y_Config_Drop) > 0 &&
+                            HandCards.Count(x => new NeutralMinion(x).BoardCard != null && x.Cost <= Z_Config_Drop) > 0 &&
+                            ValueReader.ValueIgnorer.IgnoreValueIfCardIsX_DropEtc)
+                        {
+                            //card is X drop and hand contain Y drop and Z drop (or below)
+                            if (
+                                !ValueReader.ValueIgnorer.MakeIgnoringOnlyIfNotBadEffect
+                                ||
+                                (ValueReader.ValueIgnorer.MakeIgnoringOnlyIfNotBadEffect &&
+                                !CardProperties.HasBadEffect(card))
+                                )
                                 chosenCards.Add(card);
                         }
                     }
-                    else if (!ValueReader.AttendMinionValue)
-                        chosenCards.Add(card);
                 }
             }
         }
