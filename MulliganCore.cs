@@ -1260,14 +1260,14 @@ namespace SmartBotUI.Mulligan
                 Combos.alreadyFoundOneCombo = true;
                 var best2Drop =
                         HandCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == 2).
-                            OrderBy(x => new NeutralMinion(x).CardValue).First();
+                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
                 var bestOther2Drop =
                         HandCards.Where(x => x.Name != best2Drop.Name &&
                             new NeutralMinion(x).BoardCard != null && x.Cost == 2).
-                                OrderBy(x => new NeutralMinion(x).CardValue).First();
+                                OrderBy(x => new NeutralMinion(x).CardValue).Last();
                 var best4Drop =
                         HandCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == 4).
-                            OrderBy(x => new NeutralMinion(x).CardValue).First();
+                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
 
                 var bestDrops = new[] { best2Drop, bestOther2Drop, best4Drop };
 
@@ -1292,17 +1292,17 @@ namespace SmartBotUI.Mulligan
                 Combos.alreadyFoundOneCombo = true;
                 var best2Drop =
                         HandCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == 2).
-                            OrderBy(x => new NeutralMinion(x).CardValue).First();
+                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
                 var bestOther2Drop =
                         HandCards.Where(x => x.Name != best2Drop.Name &&
                             new NeutralMinion(x).BoardCard != null && x.Cost == 2).
-                                OrderBy(x => new NeutralMinion(x).CardValue).First();
+                                OrderBy(x => new NeutralMinion(x).CardValue).Last();
                 var best3Drop =
                         HandCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == 3).
-                            OrderBy(x => new NeutralMinion(x).CardValue).First();
+                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
                 var best4Drop =
                         HandCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == 4).
-                            OrderBy(x => new NeutralMinion(x).CardValue).First();
+                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
 
                 var bestDrops = new[] { best2Drop, bestOther2Drop, best3Drop, best4Drop };
 
@@ -1339,13 +1339,13 @@ namespace SmartBotUI.Mulligan
                 //add BEST x - 1 drop and x - 2 drop
                 var bestXDrop =
                         HandCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == X_Config_Drop).
-                            OrderBy(x => new NeutralMinion(x).CardValue).First();
+                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
                 var bestX_1Drop =
                         HandCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == X_Config_Drop - 1).
-                            OrderBy(x => new NeutralMinion(x).CardValue).First();
+                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
                 var bestX_2Drop =
                         HandCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == X_Config_Drop - 2).
-                            OrderBy(x => new NeutralMinion(x).CardValue).First();
+                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
 
                 var bestDrops = new[] { bestXDrop, bestX_1Drop, bestX_2Drop };
 
