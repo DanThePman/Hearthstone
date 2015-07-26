@@ -11,9 +11,7 @@ using CType = SmartBot.Plugins.API.Card.CType;
 
 namespace SmartBotUI.Mulligan
 {
-    [Serializable]
-    public class bMulliganProfile : MulliganProfile
-    {
+    [Serializable]a
         public class Combos
         {
             public static bool alreadyFoundOneCombo { get; set; }
