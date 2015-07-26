@@ -575,8 +575,8 @@ namespace SmartBotUI.Mulligan
                 MinCardQualityToInstantAddMinion = 30,
 
 
-                AllowTwinsBool = 41,
-                DontAllowTwinsIfManaCostAtLeast = 42;
+                AllowTwinsBool = 39,
+                DontAllowTwinsIfManaCostAtLeast = 40;
             }
 
             public static SmartBot.Plugins.API.Card.CQuality MinCardQualityToInstantAddMinion
