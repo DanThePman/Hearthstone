@@ -908,7 +908,7 @@ namespace SmartBotUI.Mulligan
 
         public override List<Card> HandleMulligan(List<Card> Choices, CClass opponentClass, CClass ownClass)
         {
-            int MaxManaCost = ValueReader.MaxManaCost;
+            int MaxManaCost = ValueReader.MaxManaCost;            
 
             if ((ownClass == CClass.HUNTER || ownClass == CClass.WARLOCK) &&
             SettingsManager.BotMode != SettingsManager.Mode.Arena &&
@@ -1019,6 +1019,7 @@ namespace SmartBotUI.Mulligan
                     whiteList.Add("CS2_091");//Light's Justice
                     whiteList.Add("EX1_363");//Blessing of Wisdom
                     whiteList.Add("CS2_087");//Blessing of Might
+                    whiteList.Add("EX1_136");//Redemption
                     whiteList.Add("FP1_020");//Avenges
                     break;
                 case CClass.PRIEST:
@@ -1233,20 +1234,14 @@ namespace SmartBotUI.Mulligan
             }
             #endregion TwinManaging
 
+            ManageCombos(MaxManaCost, Choices);
+
             foreach (var card in Choices.Where(x => !blackList.Contains(x.Name)))
             {
-                if (card.Name == "GAME_005") //Coin
-                {
-                    chosenCards.Add(card);
-                    continue;
-                }
-
-                ManageCombos(MaxManaCost, Choices);
-
                 if (whiteList.Contains(card.Name))
                     chosenCards.Add(card);
                 else if (new NeutralMinion(card).BoardCard != null &&
-                    card.Cost <= MaxManaCost && !blackList.Contains(card.Name))
+                    card.Cost <= MaxManaCost)
                         ManageNeutralMinion(card, MaxManaCost, Choices);
             }
         }
