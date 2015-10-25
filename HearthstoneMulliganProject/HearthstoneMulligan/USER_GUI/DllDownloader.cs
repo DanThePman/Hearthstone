@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 
 namespace HearthstoneMulligan.USER_GUI
 {
@@ -48,7 +42,7 @@ namespace HearthstoneMulligan.USER_GUI
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
-                    FileName = Environment.CurrentDirectory + @"\replace.bat"
+                    FileName = Environment.CurrentDirectory + @"\ReplaceUpdate.exe"
                 }
             };
             process.Start();
