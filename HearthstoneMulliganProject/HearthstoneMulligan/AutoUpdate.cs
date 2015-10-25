@@ -21,7 +21,7 @@ namespace HearthstoneMulligan
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
             string currentVersion = fvi.ProductVersion;
 
-            if (currentVersion == downloadStringCompletedEventArgs.Result)
+            if (currentVersion != downloadStringCompletedEventArgs.Result)
             {
                 //MainWindow window =  new MainWindow();
                 //window.ShowDialog();

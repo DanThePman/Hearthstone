@@ -1,5 +1,5 @@
 @echo off
-taskkill /f /im "MulliganTester.exe"
+taskkill /f /t /im "SmartBotUI.exe"
 timeout 5
 erase HearthstoneMulligan.dll
 rename HearthstoneMulliganNew.dll HearthstoneMulligan.dll
