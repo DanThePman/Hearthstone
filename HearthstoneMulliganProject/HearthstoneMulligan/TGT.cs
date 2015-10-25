@@ -31,9 +31,6 @@ namespace HearthstoneMulligan
             {
                 MainLists.whiteList.Add(blackListedCard);
             }
-
-            /*Last general whitelist load*/
-            MainLists.generalWhiteListLoaded = true;
         }
     }
 }

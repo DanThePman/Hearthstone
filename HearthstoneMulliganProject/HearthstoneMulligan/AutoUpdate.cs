@@ -24,6 +24,8 @@ namespace HearthstoneMulligan
             string latestVersion = downloadStringCompletedEventArgs.Result;
             latestVersion = latestVersion.Replace("\n", "");
 
+            MessageBox.Show(currentVersion);
+
             if (currentVersion != latestVersion)
             {
                 //MainWindow window =  new MainWindow();

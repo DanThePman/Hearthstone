@@ -13,8 +13,5 @@ namespace HearthstoneMulligan
         public static List<string> whiteList = new List<string>() { "GAME_005" /*Coin*/ };
         public static List<string> blackList = new List<string>();
         public static List<Card.Cards> chosenCards = new List<Card.Cards>();
-
-        public static bool generalWhiteListLoaded = false;
-        public static bool generalBlackListLoaded = false;
     }
 }
