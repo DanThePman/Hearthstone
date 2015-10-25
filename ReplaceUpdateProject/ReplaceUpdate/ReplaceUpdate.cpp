@@ -9,7 +9,7 @@
 #include <string>
 using namespace std;
 
-void killProcessByName(const char *filename)
+void killProc(const char *procName)
 {
 	HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
 	PROCESSENTRY32 pEntry;
@@ -17,7 +17,7 @@ void killProcessByName(const char *filename)
 	BOOL hRes = Process32First(hSnapShot, &pEntry);
 	while (hRes)
 	{
-		if (strcmp(pEntry.szExeFile, filename) == 0)
+		if (strcmp(pEntry.szExeFile, procName) == 0)
 		{
 			HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, 0,
 				static_cast<DWORD>(pEntry.th32ProcessID));
@@ -34,7 +34,7 @@ void killProcessByName(const char *filename)
 
 int main()
 {
-	killProcessByName("MulliganTester.exe");
+	killProc("SmartBotUI.exe");
 	TCHAR NPath[MAX_PATH];
 	GetCurrentDirectory(MAX_PATH, NPath);
 
