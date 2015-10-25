@@ -1,0 +1,23 @@
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Debug\HearthstoneMulligan.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Debug\HearthstoneMulligan.pdb
+C:\Users\Daniel\Documents\SmartBot\HearthstoneMulligan.dll
+C:\Users\Daniel\Documents\SmartBot\HearthstoneMulligan.pdb
+C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Debug\HearthstoneMulligan.g.resources
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Debug\HearthstoneMulligan.csproj.GenerateResource.Cache
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Debug\HearthstoneMulligan.Properties.Resources.resources
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Debug\HearthstoneMulligan.UpdatingWindow.resources
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Debug\HearthstoneMulligan.USER_GUI.PopUp.resources
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\HearthstoneMulligan.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\HearthstoneMulligan.pdb
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\MetroFramework.Design.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\MetroFramework.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\MetroFramework.Fonts.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\SmartBotAPI.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\Xceed.Wpf.Toolkit.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Debug\HearthstoneMulligan.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Debug\HearthstoneMulligan.pdb
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Debug\MetroFramework.Design.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Debug\MetroFramework.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Debug\MetroFramework.Fonts.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Debug\SmartBotAPI.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Debug\Xceed.Wpf.Toolkit.dll
