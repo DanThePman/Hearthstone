@@ -49,6 +49,7 @@ int main()
 	else
 		puts("File successfully deleted");
 
+	Sleep(2000);
 	rename(donwloadedFile.c_str(), oldFile.c_str());
     return 0;
 }
