@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Windows.Forms;
 using SmartBot.Plugins.API;
 
 namespace SmartBot.Mulligan
@@ -10,7 +9,7 @@ namespace SmartBot.Mulligan
     public class DefaultMulliganProfile : MulliganProfile
     {
         private static string dllPath = Environment.CurrentDirectory +
-                                        @"\MulliganProfiles\MulliganCore\HearthstoneMulligan.dll";
+                                        @"\HearthstoneMulligan.dll";
 
         public List<Card.Cards> HandleMulligan(List<Card.Cards> choices, Card.CClass opponentClass, Card.CClass ownClass)
         {

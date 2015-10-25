@@ -21,3 +21,4 @@ C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\Hearth
 C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Debug\MetroFramework.Fonts.dll
 C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Debug\SmartBotAPI.dll
 C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Debug\Xceed.Wpf.Toolkit.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Debug\HearthstoneMulligan.csprojResolveAssemblyReference.cache
