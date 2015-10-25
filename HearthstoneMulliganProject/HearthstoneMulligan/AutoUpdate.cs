@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Net;
+using System.Windows.Forms;
 using HearthstoneMulligan.USER_GUI;
 
 namespace HearthstoneMulligan
@@ -20,8 +21,10 @@ namespace HearthstoneMulligan
             System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
             FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
             string currentVersion = fvi.ProductVersion;
+            string latestVersion = downloadStringCompletedEventArgs.Result;
+            latestVersion = latestVersion.Replace("\n", "");
 
-            if (currentVersion != downloadStringCompletedEventArgs.Result)
+            if (currentVersion != latestVersion)
             {
                 //MainWindow window =  new MainWindow();
                 //window.ShowDialog();
