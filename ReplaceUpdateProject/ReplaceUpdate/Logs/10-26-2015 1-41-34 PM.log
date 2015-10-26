@@ -1,0 +1,12 @@
+[13:41:34] [DEBUG]NotValidTemplate
+[13:41:34] [DEBUG]NotValidTemplate valid
+[13:41:36] Relogger started
+[13:41:36] [DEBUG]Auth OnConnect
+[13:41:36] Hearthstone status changed : Opened
+[13:41:36] [DEBUG]Connected to auth
+[13:41:36] Hearthstone path updated : C:\Program Files (x86)\Hearthstone\Hearthstone.exe
+[13:41:36] Hearthstone status changed : Ready
+[13:41:36] [DEBUG]Profile changed to : Default
+[13:41:37] [DEBUG]OnValidate :False
+[13:41:37] License expired
+[13:41:37] [DEBUG]Can't get validation from server

@@ -1,16 +1,21 @@
-﻿Build started 25.10.2015 13:36:14.
+﻿Build started 26.10.2015 16:57:45.
      1>Project "C:\Users\Daniel\Documents\Visual Studio 2015\Projects\ReplaceUpdate\ReplaceUpdate\ReplaceUpdate.vcxproj" on node 2 (Rebuild target(s)).
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(368,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Yc"stdafx.h" /Fp"Debug\ReplaceUpdate.pch" /Fo"Debug\\" /Fd"Debug\vc140.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Yc"stdafx.h" /Fp"Debug\ReplaceUpdate.pch" /Fo"Debug\\" /Fd"Debug\vc140.pdb" /FR"Debug\\" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
          stdafx.cpp
-         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Yu"stdafx.h" /Fp"Debug\ReplaceUpdate.pch" /Fo"Debug\\" /Fd"Debug\vc140.pdb" /Gd /TP /analyze- /errorReport:prompt ReplaceUpdate.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl- /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Zc:inline /Yu"stdafx.h" /Fp"Debug\ReplaceUpdate.pch" /Fo"Debug\\" /Fd"Debug\vc140.pdb" /FR"Debug\\" /Gd /TP /analyze- /errorReport:prompt ReplaceUpdate.cpp
          ReplaceUpdate.cpp
+     1>c:\users\daniel\documents\visual studio 2015\projects\replaceupdate\replaceupdate\replaceupdate.cpp(169): warning C4101: 'sbExitCode': unreferenced local variable
+     1>c:\users\daniel\documents\visual studio 2015\projects\replaceupdate\replaceupdate\replaceupdate.cpp(169): warning C4101: 'hsExitCode': unreferenced local variable
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Daniel\Documents\Visual Studio 2015\Projects\ReplaceUpdate\Debug\ReplaceUpdate.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"C:\Users\Daniel\Documents\Visual Studio 2015\Projects\ReplaceUpdate\Debug\ReplaceUpdate.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Daniel\Documents\Visual Studio 2015\Projects\ReplaceUpdate\Debug\ReplaceUpdate.lib" /MACHINE:X86 Debug\ReplaceUpdate.obj
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"..\..\..\..\SmartBot\ReplaceUpdate.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /Debug /PDB:"..\..\..\..\SmartBot\ReplaceUpdate.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"..\..\..\..\SmartBot\ReplaceUpdate.lib" /MACHINE:X86 Debug\ReplaceUpdate.obj
          Debug\stdafx.obj
-         ReplaceUpdate.vcxproj -> C:\Users\Daniel\Documents\Visual Studio 2015\Projects\ReplaceUpdate\Debug\ReplaceUpdate.exe
+         ReplaceUpdate.vcxproj -> C:\Users\Daniel\Documents\Visual Studio 2015\Projects\ReplaceUpdate\ReplaceUpdate\..\..\..\..\SmartBot\ReplaceUpdate.exe
+       BscMake:
+         C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin\bscmake.exe /nologo /o"..\..\..\..\SmartBot\ReplaceUpdate.bsc" /n Debug\ReplaceUpdate.sbr Debug\stdafx.sbr
      1>Done Building Project "C:\Users\Daniel\Documents\Visual Studio 2015\Projects\ReplaceUpdate\ReplaceUpdate\ReplaceUpdate.vcxproj" (Rebuild target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:01.26
+Time Elapsed 00:00:03.17
