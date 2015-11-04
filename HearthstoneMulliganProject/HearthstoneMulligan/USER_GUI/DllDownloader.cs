@@ -2,22 +2,35 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
+using System.Windows;
 
 namespace HearthstoneMulligan.USER_GUI
 {
+    /// <summary>
+    /// Size of Config file for proc bar throwed/throwable
+    /// </summary>
     class DllDownloader
     {
-        public static UpdatingWindow form;
-        public void DownloadLatestDLL()
+        /*Main download currentForm kept here to have access over the GUI thread*/
+        public UpdatingWindow currentForm;
+        private static bool isCoreUpdate;
+        public void DownloadLatestDLL(string url, string hardDiskPathToSafe, bool _isCoreUpdate = true)
         {
-            WebClient wbClient = new WebClient();
+            if (currentForm == null)
+                return;
 
-            string dllDownloadUrl = "https://github.com/DanThePman/Hearthstone/raw/master/HearthstoneMulligan.dll";
+            dllDownloadCompleted = false;
+            configFileDownloadCompleted = !_isCoreUpdate;//init with true if no core update
+            isCoreUpdate = _isCoreUpdate;
+
+            WebClient wbClient = new WebClient();
 
             wbClient.DownloadFileCompleted += DllDownloadCompleted;
             wbClient.DownloadProgressChanged += DllDownloadProgressChanged;
-            wbClient.DownloadFileTaskAsync(dllDownloadUrl, Environment.CurrentDirectory +
-                                                            @"\HearthstoneMulliganNew.dll");
+            wbClient.DownloadFileTaskAsync(url, hardDiskPathToSafe);
+
+            if (isCoreUpdate)
+                DownloadConfigFile();
         }
 
         private void DllDownloadProgressChanged(object sender,
@@ -28,22 +41,62 @@ namespace HearthstoneMulligan.USER_GUI
 
             float percent = x * 100;
 
-            form.metroProgressBar1.Value = (int)percent;
+            currentForm.metroProgressBar1.Value = (int)percent;
         }
 
+        private bool dllDownloadCompleted = false;
+        private bool configFileDownloadCompleted = false;
         private void DllDownloadCompleted(object sender, AsyncCompletedEventArgs asyncCompletedEventArgs)
         {
-            form.metroProgressBar1.Value = form.metroProgressBar1.Maximum;
+            dllDownloadCompleted = true;
+
+            if (configFileDownloadCompleted)
+            {
+                if (isCoreUpdate)
+                    OnUpdateFinished();
+                else
+                {
+                    currentForm.Close();
+                }
+            }
+        }
+
+        private void DownloadConfigFile()
+        {
+            WebClient wbClient2 = new WebClient();
+            wbClient2.DownloadFileCompleted += (sender, args) =>
+            {
+                configFileDownloadCompleted = true;
+
+                if (dllDownloadCompleted)
+                {
+                    if (isCoreUpdate)
+                        OnUpdateFinished();
+                    else
+                    {
+                        currentForm.Close();
+                    }
+                }
+            };
+
+            string dllDownloadUrlOfConfigFile = "https://raw.githubusercontent.com/DanThePman/Hearthstone/master/Download/PlaceContentInThe_MulliganProfiles_Folder/MulliganCore.config";
+            wbClient2.DownloadFileTaskAsync(dllDownloadUrlOfConfigFile, Environment.CurrentDirectory 
+                + @"\MulliganProfiles\MulliganCore.config");
+        }
+
+        private void OnUpdateFinished()
+        {
+            currentForm.metroProgressBar1.Value = currentForm.metroProgressBar1.Maximum;
 
             Process process = new Process
             {
                 StartInfo =
-                {
+                    {
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     FileName = Environment.CurrentDirectory + @"\ReplaceUpdate.exe"
-                }
+                    }
             };
             process.Start();
         }

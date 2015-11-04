@@ -14,34 +14,40 @@ public class ValueReader
     private class Lines
     {
         public const int
-        MaxManaCost = 3,
-        MaxManaCostWarlockAndHunter = 4,
+            MaxManaCost = 3,
+            MaxManaCostWarlockAndHunter = 4,
 
 
-        AttendMinionValueBool = 8,
-        MinManaCostToAttendValue = 9,
-        MinNeutralMinionValue = 10,
-        IncreaseMinMinionValueIfMaxCostBool = 15,
-        IgnoreValueIfCardIsX_DropEtcBool = 17,
-            X_Drop = 18,
-        IgnoreValueIf_2234_AndCoin = 19,
-        IgnoreValueIf_244_AndCoin = 20,
-        OnlyIgnoreValueIfNoBadEffect = 21,
+            AttendMinionValueBool = 8,
+            MinManaCostToAttendValue = 9,
+            MinNeutralMinionValue = 11,
+            MinCardQualityToInstantAddMinion = 19,
+            IncreaseMinMinionValueIfMaxCostBool = 26,
+            IgnoreValueIfCardIsX_DropEtcBool = 28,
+            X_Drop = 29,
+            IgnoreValueIf_2234_AndCoin = 30,
+            IgnoreValueIf_244_AndCoin = 31,
+            OnlyIgnoreValueIfNoBadEffect = 32,
 
-        ComboCase1Priority = 24,
-        ComboCase2Priority = 25,
-        ComboCase3Priority = 26,
+            ComboCase1Priority = 35,
+            ComboCase2Priority = 36,
+            ComboCase3Priority = 37,
 
-        AddMillhouseToBlackList = 30,
-        AddSoulFireToBlackList = 31,
-
-
-        MaxManaToInstantAddNeutralMinion = 35,
-        MinCardQualityToInstantAddMinion = 37,
+            AddMillhouseToBlackList = 41,
+            AddSoulFireToBlackList = 42,
 
 
-        AllowTwinsBool = 46,
-        DontAllowTwinsIfManaCostAtLeast = 47;
+            AllowTwinsBool = 46,
+            DontAllowTwinsIfManaCostAtLeast = 47,
+
+            EnableCoachModeBool = 58,
+            /*Min probablility of drawing a good/acct. card to replace a common/bad one*/
+            MinProbabilityToReplace = 59;
+    }
+
+    public static int MinProbabilityToReplace
+    {
+        get { return Convert.ToInt32(GetStringReadedValue(Lines.MinProbabilityToReplace)); }
     }
 
     public static SmartBot.Plugins.API.Card.CQuality MinCardQualityToInstantAddMinion
@@ -64,6 +70,140 @@ public class ValueReader
                     return SmartBot.Plugins.API.Card.CQuality.Epic;
             }
         }
+    }
+
+    public static bool IsCoachModeEnabled
+    {
+        get { return GetStringReadedValue(Lines.EnableCoachModeBool).Equals("true"); }
+    }
+    public static bool IncreaseMinMinionValueIfMaxCost
+    {
+        get { return GetStringReadedValue(Lines.IncreaseMinMinionValueIfMaxCostBool).Equals("true"); }
+    }
+
+    public static bool AllowTwins
+    {
+        get { return GetStringReadedValue(Lines.AllowTwinsBool).Equals("true"); }
+    }
+
+    public static int DontAllowTwinsIfManaCostAtLeast
+    {
+        get { return Convert.ToInt32(GetStringReadedValue(Lines.DontAllowTwinsIfManaCostAtLeast)); }
+    }
+
+    public static int MinManaCostToAttendValue
+    {
+        get { return Convert.ToInt32(GetStringReadedValue(Lines.MinManaCostToAttendValue)); }
+    }
+
+    public static bool AttendMinionValue
+    {
+        get { return GetStringReadedValue(Lines.AttendMinionValueBool).Equals("true"); }
+    }
+
+    public static int MaxManaCost
+    {
+        get { return Convert.ToInt32(GetStringReadedValue(Lines.MaxManaCost)); }
+    }
+
+    public static int MaxManaCostWarlockAndHunter
+    {
+        get { return Convert.ToInt32(GetStringReadedValue(Lines.MaxManaCostWarlockAndHunter)); }
+    }
+
+    public static NeutralMinion.Value MinNeutralMinionValue
+    {
+        get
+        {
+            switch (GetStringReadedValue(Lines.MinNeutralMinionValue).ToLower())
+            {
+                case "bad":
+                    return NeutralMinion.Value.Bad;
+                case "medium":
+                    return NeutralMinion.Value.Medium;
+                case "good":
+                    return NeutralMinion.Value.Good;
+                case "excellent":
+                    return NeutralMinion.Value.Excellent;
+                default:
+                    return NeutralMinion.Value.Medium;
+            }
+        }
+    }
+
+    public static NeutralMinion.Value IncreasedMinNeutralMinionValue
+    {
+        get
+        {
+            switch (MinNeutralMinionValue)
+            {
+                case NeutralMinion.Value.Bad:
+                    return NeutralMinion.Value.Medium;
+                case NeutralMinion.Value.Medium:
+                    return NeutralMinion.Value.Good;
+                case NeutralMinion.Value.Good:
+                    return NeutralMinion.Value.Excellent;
+                default:
+                    return NeutralMinion.Value.Excellent;
+            }
+        }
+    }
+
+    public static class BlackList
+    {
+        public static bool AddSoulFire
+        {
+            get { return GetStringReadedValue(Lines.AddSoulFireToBlackList).Equals("true"); }
+        }
+        public static bool AddMillhouseManastorm
+        {
+            get { return GetStringReadedValue(Lines.AddMillhouseToBlackList).Equals("true"); }
+        }
+    }
+
+    public static IEnumerable<string> GetOwnBlackListEntries()
+    {
+        List<string> Entries = new List<string>();
+        bool reachedOwnBlackList = false;
+
+        using (System.IO.StreamReader sr = new System.IO.StreamReader(ConfigPath))
+        {
+            while (!sr.EndOfStream)
+            {
+                string line = sr.ReadLine();
+
+                if (line.Contains("Own Black List End"))
+                    reachedOwnBlackList = false;
+
+                if (reachedOwnBlackList && line.Length > 2)
+                {
+                    int startPos = line.Contains(")") ? 1 : 0;
+                    int endPos = startPos == 1 ? line.LastIndexOf(")")
+                        : line.Length;
+
+                    Entries.Add(line.Substring(startPos, endPos - startPos));
+                }
+
+                if (line.Contains("Own Black List"))
+                    reachedOwnBlackList = true;
+            }
+            sr.Close();
+        }
+
+        return Entries;
+    }
+
+    private static string GetStringReadedValue(int line)
+    {
+        string searchedLine = System.IO.File.ReadAllLines(ConfigPath)[line - 1];
+
+
+        int startPos = searchedLine.LastIndexOf("=") + 1;
+        int endPos = searchedLine.Length;
+        string filteredValue = searchedLine.Substring(startPos, endPos - startPos);
+        filteredValue = filteredValue.Replace(" ", "");
+
+        return filteredValue;
     }
 
     public class ValueIgnorer
@@ -198,140 +338,5 @@ public class ValueReader
                 return AllComboCases.OrderBy(x => -x.Value);
             }
         }
-    }
-
-    public static bool IncreaseMinMinionValueIfMaxCost
-    {
-        get { return GetStringReadedValue(Lines.IncreaseMinMinionValueIfMaxCostBool).Equals("true"); }
-    }
-
-    public static bool AllowTwins
-    {
-        get { return GetStringReadedValue(Lines.AllowTwinsBool).Equals("true"); }
-    }
-
-    public static int DontAllowTwinsIfManaCostAtLeast
-    {
-        get { return Convert.ToInt32(GetStringReadedValue(Lines.DontAllowTwinsIfManaCostAtLeast)); }
-    }
-
-    public static int MaxManaToInstantAddNeutralMinion
-    {
-        get { return Convert.ToInt32(GetStringReadedValue(Lines.MaxManaToInstantAddNeutralMinion)); }
-    }
-
-    public static int MinManaCostToAttendValue
-    {
-        get { return Convert.ToInt32(GetStringReadedValue(Lines.MinManaCostToAttendValue)); }
-    }
-
-    public static bool AttendMinionValue
-    {
-        get { return GetStringReadedValue(Lines.AttendMinionValueBool).Equals("true"); }
-    }
-
-    public static int MaxManaCost
-    {
-        get { return Convert.ToInt32(GetStringReadedValue(Lines.MaxManaCost)); }
-    }
-
-    public static int MaxManaCostWarlockAndHunter
-    {
-        get { return Convert.ToInt32(GetStringReadedValue(Lines.MaxManaCostWarlockAndHunter)); }
-    }
-
-    public static NeutralMinion.Value MinNeutralMinionValue
-    {
-        get
-        {
-            switch (GetStringReadedValue(Lines.MinNeutralMinionValue).ToLower())
-            {
-                case "bad":
-                    return NeutralMinion.Value.Bad;
-                case "medium":
-                    return NeutralMinion.Value.Medium;
-                case "good":
-                    return NeutralMinion.Value.Good;
-                case "excellent":
-                    return NeutralMinion.Value.Excellent;
-                default:
-                    return NeutralMinion.Value.Medium;
-            }
-        }
-    }
-
-    public static NeutralMinion.Value IncreasedMinNeutralMinionValue
-    {
-        get
-        {
-            switch (MinNeutralMinionValue)
-            {
-                case NeutralMinion.Value.Bad:
-                    return NeutralMinion.Value.Medium;
-                case NeutralMinion.Value.Medium:
-                    return NeutralMinion.Value.Good;
-                case NeutralMinion.Value.Good:
-                    return NeutralMinion.Value.Excellent;
-                default:
-                    return NeutralMinion.Value.Excellent;
-            }
-        }
-    }
-
-    public static class BlackList
-    {
-        public static bool AddSoulFire
-        {
-            get { return GetStringReadedValue(Lines.AddSoulFireToBlackList).Equals("true"); }
-        }
-        public static bool AddMillhouseManastorm
-        {
-            get { return GetStringReadedValue(Lines.AddMillhouseToBlackList).Equals("true"); }
-        }
-    }
-
-    public static IEnumerable<string> GetOwnBlackListEntries()
-    {
-        List<string> Entries = new List<string>();
-        bool reachedOwnBlackList = false;
-
-        using (System.IO.StreamReader sr = new System.IO.StreamReader(ConfigPath))
-        {
-            while (!sr.EndOfStream)
-            {
-                string line = sr.ReadLine();
-
-                if (line.Contains("Own Black List End"))
-                    reachedOwnBlackList = false;
-
-                if (reachedOwnBlackList && line.Length > 2)
-                {
-                    int startPos = line.Contains(")") ? 1 : 0;
-                    int endPos = startPos == 1 ? line.LastIndexOf(")")
-                        : line.Length;
-
-                    Entries.Add(line.Substring(startPos, endPos - startPos));
-                }
-
-                if (line.Contains("Own Black List"))
-                    reachedOwnBlackList = true;
-            }
-            sr.Close();
-        }
-
-        return Entries;
-    }
-
-    private static string GetStringReadedValue(int line)
-    {
-        string searchedLine = System.IO.File.ReadAllLines(ConfigPath)[line - 1];
-
-
-        int startPos = searchedLine.LastIndexOf("=") + 1;
-        int endPos = searchedLine.Length;
-        string filteredValue = searchedLine.Substring(startPos, endPos - startPos);
-        filteredValue = filteredValue.Replace(" ", "");
-
-        return filteredValue;
     }
 }

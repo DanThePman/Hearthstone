@@ -1,4 +1,6 @@
-﻿using HearthstoneMulligan;
+﻿using System;
+using System.Windows;
+using HearthstoneMulligan;
 using SmartBot.Database;
 using SmartBot.Plugins.API;
 
@@ -7,6 +9,81 @@ using SmartBot.Plugins.API;
 /// </summary> 
 public class NeutralMinion
 {
+    public static int MaxManaCostFromMain;
+    public static void ManageNeutralMinion(Card.Cards card)
+    {
+        //<= max mana
+        var boardCard = new BoardCard(card);
+
+        if (boardCard.ResultingBoardCard.Quality >= ValueReader.MinCardQualityToInstantAddMinion) //epic by default
+            MainLists.chosenCards.Add(card);
+        else
+        { //card quality not hight enough
+            if (!ValueReader.AttendMinionValue ||
+                boardCard.ResultingBoardCard.Cost < ValueReader.MinManaCostToAttendValue)//mana <= max cost & mana < MinManaCostToAttendValue
+                MainLists.chosenCards.Add(card);
+            else if (boardCard.ResultingBoardCard.Cost >= ValueReader.MinManaCostToAttendValue)
+            {
+                var minionCard = new NeutralMinion(card);
+                NeutralMinion.Value requiredMinNeutralMinionValue =
+                    minionCard.BoardCard.IsMaxManaCard && ValueReader.IncreaseMinMinionValueIfMaxCost
+                    ?
+                    ValueReader.IncreasedMinNeutralMinionValue
+                    :
+                    ValueReader.MinNeutralMinionValue;
+
+                if (minionCard.CardValue >= requiredMinNeutralMinionValue)
+                    MainLists.chosenCards.Add(card);
+            }
+        }
+    }
+
+    public static bool WouldTakeMinion(CardTemplate boardCard)
+    {
+        try
+        {
+            if (new NeutralMinion(boardCard).BoardCard == null) //not a neutral minion
+                return false;
+            //<= max mana
+            Card.Cards card = CardTemplate.StringToCard(boardCard.Id.ToString());
+
+            #region normalChecks
+
+            if (MainLists.whiteList.Contains(boardCard.Id.ToString()))
+                return true;
+            if (MainLists.blackList.Contains((boardCard.Id.ToString())))
+                return false;
+
+            if (boardCard.Quality >= ValueReader.MinCardQualityToInstantAddMinion) //epic by default
+                return true;
+
+            //card quality not hight enough and mana to high too
+            if ((!ValueReader.AttendMinionValue ||
+                 boardCard.Cost < ValueReader.MinManaCostToAttendValue) && boardCard.Cost <= ValueReader.MaxManaCost)
+                return true;
+
+            if (boardCard.Cost > ValueReader.MaxManaCost)
+                return false;
+
+            //value has to be attended
+            var minionCard = new NeutralMinion(card);
+            NeutralMinion.Value requiredMinNeutralMinionValue =
+                minionCard.BoardCard.IsMaxManaCard && ValueReader.IncreaseMinMinionValueIfMaxCost
+                    ? ValueReader.IncreasedMinNeutralMinionValue
+                    : ValueReader.MinNeutralMinionValue;
+
+            return minionCard.CardValue >= requiredMinNeutralMinionValue;
+
+            #endregion normalChecks
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(ex.Message);
+            return false;
+        }
+              
+    }
+
     public BoardCard BoardCard { get; private set; }
     public Value CardValue { get; private set; }
 

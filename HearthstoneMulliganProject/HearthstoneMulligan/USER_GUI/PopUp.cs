@@ -24,7 +24,8 @@ namespace HearthstoneMulligan.USER_GUI
                 }
                 else if (clickedYes)
                 {
-                    new DllDownloader().DownloadLatestDLL();
+                    new DllDownloader().DownloadLatestDLL("https://github.com/DanThePman/Hearthstone/blob/master/Download/PlaceContentInThe_SmartBot_Folder/HearthstoneMulligan.dll?raw=true",
+                        Environment.CurrentDirectory + @"\HearthstoneMulliganNew.dll");
                 }
             };
         }

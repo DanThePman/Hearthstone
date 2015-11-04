@@ -1,0 +1,21 @@
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Release\HearthstoneMulligan.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Release\HearthstoneMulligan.pdb
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Release\MetroFramework.Design.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Release\MetroFramework.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Release\MetroFramework.Fonts.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Release\SmartBotAPI.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Release\Xceed.Wpf.Toolkit.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Release\HearthstoneMulligan.g.resources
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Release\HearthstoneMulligan.Properties.Resources.resources
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Release\HearthstoneMulligan.UpdatingWindow.resources
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Release\HearthstoneMulligan.USER_GUI.PopUp.resources
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Release\HearthstoneMulligan.csproj.GenerateResource.Cache
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Release\HearthstoneMulligan.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Release\HearthstoneMulligan.pdb
+C:\Users\Daniel\Documents\SmartBot\HearthstoneMulligan.dll
+C:\Users\Daniel\Documents\SmartBot\HearthstoneMulligan.pdb
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\obj\Debug\HearthstoneMulligan.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\obj\Debug\HearthstoneMulligan.pdb
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Release\CoachMode\CoachWindow.g.cs
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Release\HearthstoneMulligan_MarkupCompile.cache
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\Release\CoachMode\CoachWindow.baml

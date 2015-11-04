@@ -1,0 +1,31 @@
+﻿<controls:MetroWindow x:Name="Mulligan_Coach" x:Class="HearthstoneMulligan.USER_GUI.CoachMode.CoachWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:metroChart="clr-namespace:De.TorstenMandelkow.MetroChart;assembly=De.TorstenMandelkow.MetroChart"
+        xmlns:controls="http://metro.mahapps.com/winfx/xaml/controls"
+        mc:Ignorable="d"
+        Title="Mulligan Coach" Height="624" Width="523">
+    <Grid HorizontalAlignment="Left" Width="525">
+        <metroChart:ClusteredColumnChart x:Name="infoLabel1" ChartSubTitle="Current Mana Curves" ChartTitle="Curves" Margin="0,0,10,144">
+            <metroChart:ClusteredColumnChart.Series>
+                <metroChart:ChartSeries DisplayMember="Name"
+    				ItemsSource="{Binding ManaCurves}"
+    				SeriesTitle="Mana Amount"
+    				ValueMember="Amount" />
+
+            </metroChart:ClusteredColumnChart.Series>
+        </metroChart:ClusteredColumnChart>
+        <Label x:Name="infoLabel" Content="By replacing a medium card there is a chance of drawing a better one." HorizontalAlignment="Left" Margin="10,288,0,0" VerticalAlignment="Top" FontSize="16"/>
+        <Label x:Name="minProb_info" Content="Minimum Probability of drawing&#10;&quot;Medium+&quot; to replace: " HorizontalAlignment="Left" Margin="27,342,0,0" VerticalAlignment="Top"/>
+        <ProgressBar x:Name="minProb_procBar" HorizontalAlignment="Left" Height="26" Margin="233,358,0,0" VerticalAlignment="Top" Width="204"/>
+        <Label x:Name="minProb_lbl" Content="N/a" HorizontalAlignment="Left" Margin="442,358,0,0" VerticalAlignment="Top" Width="41"/>
+        <Label x:Name="realProb_info" Content="Real probability:" HorizontalAlignment="Left" Margin="27,406,0,0" VerticalAlignment="Top" Width="181"/>
+        <ProgressBar x:Name="realProb_procBar" HorizontalAlignment="Left" Height="26" Margin="233,406,0,0" VerticalAlignment="Top" Width="204"/>
+        <Label x:Name="realProb_lbl" Content="N/a" HorizontalAlignment="Left" Margin="442,406,0,0" VerticalAlignment="Top" Width="41"/>
+        <Label x:Name="replaceCount_info" Content="...by being able to replace N/a cards in hand" HorizontalAlignment="Left" Margin="27,437,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="textBox1" HorizontalAlignment="Left" Height="115" Margin="237,468,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="267"/>
+        <Label x:Name="cardsInfo" Content="Cards which would be replaced then:" HorizontalAlignment="Left" Margin="27,507,0,0" VerticalAlignment="Top"/>
+    </Grid>
+</controls:MetroWindow>
