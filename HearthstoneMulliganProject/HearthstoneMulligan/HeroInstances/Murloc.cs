@@ -1,7 +1,8 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using SmartBot.Plugins.API;
 
-namespace HearthstoneMulligan
+namespace HearthstoneMulligan.HeroInstances
 {
     class Murloc
     {
@@ -9,12 +10,17 @@ namespace HearthstoneMulligan
         {
             get
             {
-                Deck ownDeck = Bot.CurrentDeck();//MulliganTester doesnt Handle this :(
+                try
+                {
+                    int murlocCount = MainLists.currentDeck.Cards.
+                        Count(x => new BoardCard(x).ResultingBoardCard.Race == Card.CRace.MURLOC);
 
-                int? murlocCount = ownDeck?.Cards.
-                    Count(x => new BoardCard(x).ResultingBoardCard.Race == Card.CRace.MURLOC);
-
-                return murlocCount >= 7;
+                    return murlocCount >= 7;
+                }
+                catch
+                {
+                    return false;
+                }
             }
         }
     }

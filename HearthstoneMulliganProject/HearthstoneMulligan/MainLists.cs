@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using HearthstoneMulligan.Specific_Mulligans;
 using SmartBot.Database;
 using SmartBot.Plugins.API;
 
@@ -16,6 +13,14 @@ namespace HearthstoneMulligan
         public static List<Card.Cards> chosenCards = new List<Card.Cards>();
 
         public static List<CardTemplate> HandCards_BoardCards = new List<CardTemplate>();
+        public static List<Card.Cards> HandCards_native = new List<Card.Cards>();
+
+        public static Card.CClass OwnClass = Card.CClass.NONE;
+        public static Card.CClass OpponentClass = Card.CClass.NONE;
+
+        public static DeckTypeDetector.DeckType CurrentDeckType = DeckTypeDetector.DeckType.UNKNOWN;
+
+        public static int MaxManaCost = 3;
 
         public static Deck currentDeck;
     }

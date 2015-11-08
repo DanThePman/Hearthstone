@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using SmartBot.Database;
-using SmartBot.Plugins.API;
 
-namespace HearthstoneMulligan
+namespace HearthstoneMulligan.HeroInstances
 {
     class Mage
     {
@@ -18,12 +18,17 @@ namespace HearthstoneMulligan
         {
             get
             {
-                Deck ownDeck = Bot.CurrentDeck();//MulliganTester doesnt Handle this :(
+                try
+                {
+                    int secretCountInDeck =
+                        MainLists.currentDeck.Cards.Count(x => new BoardCard(x).ResultingBoardCard.IsSecret);
 
-                int? secretCountInDeck =
-                    ownDeck?.Cards.Count(x => new BoardCard(x).ResultingBoardCard.IsSecret);
-
-                return secretCountInDeck ?? int.MaxValue;
+                    return secretCountInDeck;
+                }
+                catch
+                {
+                    return 0;
+                }
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿namespace HearthstoneMulligan
+﻿namespace HearthstoneMulligan.HeroInstances
 {
     class Druid
     {

@@ -8,8 +8,6 @@ C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\Hearth
 C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\x86\Release\Xceed.Wpf.Toolkit.dll
 C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\x86\Release\MahApps.Metro.dll
 C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\x86\Release\System.Windows.Interactivity.dll
-C:\Users\Daniel\Documents\SmartBot\HearthstoneMulligan.dll
-C:\Users\Daniel\Documents\SmartBot\HearthstoneMulligan.pdb
 C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\obj\Debug\HearthstoneMulligan.dll
 C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\obj\Debug\HearthstoneMulligan.pdb
 C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Release\HearthstoneMulligan.dll
@@ -22,13 +20,15 @@ C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\Hearth
 C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Release\SmartBotAPI.dll
 C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Release\System.Windows.Interactivity.dll
 C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\bin\Release\Xceed.Wpf.Toolkit.dll
-C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\USER_GUI\CoachMode\CoachWindow.baml
-C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\USER_GUI\CoachMode\CoachWindow.g.cs
-C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan_MarkupCompile.cache
-C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan.g.resources
-C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan.Properties.Resources.resources
-C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan.UpdatingWindow.resources
-C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan.USER_GUI.PopUp.resources
-C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan.csproj.GenerateResource.Cache
-C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan.dll
-C:\Users\Daniel\documents\visual studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan.pdb
+C:\Users\Daniel\Documents\SmartBot\HearthstoneMulligan.dll
+C:\Users\Daniel\Documents\SmartBot\HearthstoneMulligan.pdb
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\USER_GUI\CoachMode\CoachWindow.baml
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\USER_GUI\CoachMode\CoachWindow.g.cs
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan_MarkupCompile.cache
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan.g.resources
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan.Properties.Resources.resources
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan.USER_GUI.UpdatingWindow.resources
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan.USER_GUI.PopUp.resources
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan.csproj.GenerateResource.Cache
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan.dll
+C:\Users\Daniel\Documents\Visual Studio 2015\Projects\HearthstoneMulligan\HearthstoneMulligan\obj\x86\Release\HearthstoneMulligan.pdb

@@ -19,7 +19,7 @@ namespace HearthstoneMulligan
         {
             ResultingBoardCard = ConvertToBoardCard(MulliganCard);
 
-            IsMaxManaCard = ResultingBoardCard.Cost == ValueReader.MaxManaCost;
+            IsMaxManaCard = ResultingBoardCard.Cost == MainLists.MaxManaCost;
         }
 
         public BoardCard(string MulliganCard_STR)
@@ -27,7 +27,7 @@ namespace HearthstoneMulligan
             Card.Cards _mulliganCard = CardTemplate.StringToCard(MulliganCard_STR);
             ResultingBoardCard = ConvertToBoardCard(_mulliganCard);
 
-            IsMaxManaCard = ResultingBoardCard.Cost == ValueReader.MaxManaCost;
+            IsMaxManaCard = ResultingBoardCard.Cost == MainLists.MaxManaCost;
         }
 
         private CardTemplate ConvertToBoardCard(Card.Cards MulliganCard)

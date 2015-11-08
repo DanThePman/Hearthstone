@@ -56,7 +56,7 @@ VOID GetFileVersion(const TCHAR *pszFilePath, string& version)
 	version = s1.str() + string(".") + s2.str();
 }
 
-BOOL killProc(const char* procName, HANDLE &proc_handle)
+BOOL killProc(const char* procName)
 {
 	HANDLE hSnapShot = CreateToolhelp32Snapshot(TH32CS_SNAPALL, NULL);
 	PROCESSENTRY32 pEntry;
@@ -69,7 +69,7 @@ BOOL killProc(const char* procName, HANDLE &proc_handle)
 			HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, 0, static_cast<DWORD>(pEntry.th32ProcessID));
 			if (hProcess != nullptr)
 			{
-				proc_handle = hProcess;
+				HANDLE proc_handle = hProcess;
 				TerminateProcess(hProcess, 9);
 				CloseHandle(hProcess);
 			}
@@ -165,10 +165,8 @@ int main()
 	string oldFile = string(NPath) + string("\\HearthstoneMulligan.dll");
 	string smartBotPath = string(NPath) + string("\\SmartBotUI.exe");
 
-	HANDLE sbProc, hsProc;
-	DWORD sbExitCode, hsExitCode;
-	killProc("SmartBotUI.exe", sbProc);
-	killProc("Hearthstone.exe", hsProc);
+	killProc("SmartBotUI.exe");
+	killProc("Hearthstone.exe");
 
 	while (FindProcessId("SmartBotUI.exe") || FindProcessId("Hearthstone.exe"))
 		Sleep(100);
@@ -189,5 +187,6 @@ int main()
 
 		startup(smartBotPath.c_str());
 	}
+
 	return 0;
 }

@@ -43,18 +43,19 @@ namespace HearthstoneMulligan.USER_GUI.CoachMode
             Application.Current.Resources.MergedDictionaries.Add(Controls);
 
             InitializeComponent();
+            textBox1.IsReadOnly = true;
 
             DataContext = new MainViewModel();
 
             minProb_procBar.Value = ValueReader.MinProbabilityToReplace;
             minProb_lbl.Content = ValueReader.MinProbabilityToReplace + " %";
 
-            DeckCalculation deckCalculation = new DeckCalculation(ValueReader.MinProbabilityToReplace);
-            Tuple<int, float> treeResult = deckCalculation.GenerateTreeWhiteListDraw();
+            ProbabilityCalculation probabilityCalculation = new ProbabilityCalculation();
+            Tuple<int, float> treeResult = probabilityCalculation.GenerateTreeWhiteListDraw();
             realProb_procBar.Value = treeResult.Item2;
             realProb_lbl.Content = treeResult.Item2;
 
-            int normalMinionCount = MainLists.HandCards_BoardCards.Count(x => new NeutralMinion(x).BoardCard != null &
+            int normalMinionCount = MainLists.HandCards_BoardCards.Count(x => new NeutralMinion(x).minionBoardCard != null &&
                 NeutralMinion.WouldTakeMinion(x) && !MainLists.whiteList.Contains(x.Id.ToString()));
 
             //less medium cards than actually having possible
@@ -65,9 +66,9 @@ namespace HearthstoneMulligan.USER_GUI.CoachMode
                 int i = 1;
                 // ReSharper disable once LoopCanBePartlyConvertedToQuery
                 foreach (CardTemplate badCard in MainLists.HandCards_BoardCards.
-                    Where(x => new NeutralMinion(x).BoardCard != null && NeutralMinion.WouldTakeMinion(x) &&
+                    Where(x => new NeutralMinion(x).minionBoardCard != null && NeutralMinion.WouldTakeMinion(x) &&
                         !MainLists.whiteList.Contains(x.Id.ToString())).
-                    OrderBy(x => new NeutralMinion(x).CardValue).TakeWhile(x => i <= deltaReplaceCount))
+                    OrderBy(x => new NeutralMinion(x).thisCardValue).TakeWhile(x => i <= deltaReplaceCount))
                 {
                     string cardString = badCard.Name + " (" + badCard.Id + ")";
                     textBox1.AppendText(cardString + "\n");
@@ -88,7 +89,9 @@ namespace HearthstoneMulligan.USER_GUI.CoachMode
         public MainViewModel()
         {
             //cost in names//index equal to cost
-            int[] manaCurves = DeckCalculation.GetCurves();
+            int[] manaCurves = ProbabilityCalculation.GetCurves();
+            if (manaCurves == null)
+                return;
 
             for (int i = 0; i < 11; i++)
             {
@@ -113,6 +116,7 @@ namespace HearthstoneMulligan.USER_GUI.CoachMode
             set
             {
                 _name = value;
+                // ReSharper disable once RedundantArgumentDefaultValue
                 NotifyPropertyChanged("Name");
             }
         }
@@ -126,6 +130,7 @@ namespace HearthstoneMulligan.USER_GUI.CoachMode
             set
             {
                 _amount = value;
+                // ReSharper disable once RedundantArgumentDefaultValue
                 NotifyPropertyChanged("Amount");
             }
 

@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Net;
 using System.Windows.Forms;
 using HearthstoneMulligan.USER_GUI;
-using System.Threading.Tasks;
 
 namespace HearthstoneMulligan
 {
@@ -28,10 +27,7 @@ namespace HearthstoneMulligan
 
             if (currentVersion != latestVersion)
             {
-                //MainWindow window =  new MainWindow();
-                //window.ShowDialog();
-                DllDownloader coreDownloader = new DllDownloader { currentForm = new UpdatingWindow() };
-                coreDownloader.currentForm.ShowDialog();
+                new UpdatingWindow(true).ShowDialog();
             }
             else
             if (!System.IO.File.Exists(Environment.CurrentDirectory + @"\De.TorstenMandelkow.MetroChart.dll"))
@@ -43,7 +39,7 @@ namespace HearthstoneMulligan
                 dllDownloader.DownloadLatestDLL("https://github.com/DanThePman/Hearthstone/raw/master/Download/PlaceContentInThe_SmartBot_Folder/De.TorstenMandelkow.MetroChart.dll",
                     Environment.CurrentDirectory + @"\De.TorstenMandelkow.MetroChart.dll", false);
                 dllDownloader.currentForm.ShowDialog();
-                dllDownloader.currentForm.BringToFront();
+
                 MessageBox.Show("De.TorstenMandelkow.MetroChart.dll downloading. Please restart your SmartBot if" +
                                 " you planned to use the coach mode", "Information - External dll update",
                     MessageBoxButtons.OK,

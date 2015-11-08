@@ -4,7 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using HearthstoneMulligan.HeroInstances;
+using HearthstoneMulligan.Specific_Mulligans;
 using SmartBot.Database;
 using SmartBot.Plugins.API;
 
@@ -19,36 +20,11 @@ namespace HearthstoneMulligan
 
         public static List<Card.Cards> HandleMulligan(List<Card.Cards> choices, Card.CClass opponentClass, Card.CClass ownClass)
         {
-            List<CardTemplate> choices_BoardCards =
-                choices.Select(x => new BoardCard(x).ResultingBoardCard).ToList();
+            InitMulligan(choices, opponentClass, ownClass);
 
-            MainLists.HandCards_BoardCards = choices_BoardCards;
-            MainLists.currentDeck = Bot.CurrentDeck();
-
-            var deck = Bot.CurrentDeck();
-            AutoUpdateInit.CheckUpdate();
-            MainLists.chosenCards = new List<Card.Cards>();
-            MainLists.whiteList = new List<string>();
-            MainLists.blackList = new List<string>();
-            //BlackListEntries could get whitelisted if good combo => prefer whitelist > blacklist
-
-            //3+ mana neutral minions are origanizated by the value cuz not listed anywhere
-            int MaxManaCost = ValueReader.MaxManaCost;
-
-
-
-            if ((ownClass == Card.CClass.HUNTER || ownClass == Card.CClass.WARLOCK) &&
-            Bot.CurrentMode() != Bot.Mode.Arena &&
-            Bot.CurrentMode() != Bot.Mode.ArenaAuto)
-            {
-                MaxManaCost = ValueReader.MaxManaCostWarlockAndHunter;
-            }
-            NeutralMinion.MaxManaCostFromMain = MaxManaCost;
-
-            #region List Loading
             Task t_LoadGeneralBlackListEntries = Task.Run(() =>
             {
-                LoadGeneralBlackListEntries(opponentClass, ownClass);
+                LoadGeneralBlackListEntries(MainLists.OpponentClass, MainLists.OwnClass);
             });
 
             Task t_LoadOwnBlackListEntries = Task.Run(() =>
@@ -56,6 +32,89 @@ namespace HearthstoneMulligan
                 LoadOwnBlackListEntries();
             });
 
+            t_LoadGeneralBlackListEntries.Wait();
+            t_LoadOwnBlackListEntries.Wait();
+
+            var detectedDeckType = DeckTypeDetector.SearchForDeckType();
+            MainLists.CurrentDeckType = detectedDeckType;
+            if (detectedDeckType == DeckTypeDetector.DeckType.UNKNOWN)
+            {
+                CreateDefaultLists();
+            }
+            else //particular deck type
+            {
+                MainLists.MaxManaCost = 3;
+                DeckTypeDetector.GenerateWhiteAndBlackListForSpecialDeck(detectedDeckType);
+            }
+
+            CalculateMulligan(MainLists.MaxManaCost);
+            foreach (Task task in neutralMinionTaskList)
+            {
+                task.Wait();
+            }
+
+            //DeckCalc
+            CalculateDeckProbabilities();
+
+            if (ValueReader.IsCoachModeEnabled &&
+                File.Exists(Environment.CurrentDirectory + @"\De.TorstenMandelkow.MetroChart.dll"))
+            {
+                Thread t = new Thread(delegate ()
+                {
+                    var cWind = new USER_GUI.CoachMode.CoachWindow
+                    {
+                        Title = $"Mulligan Coach for {MainLists.CurrentDeckType.ToString()}"
+                    };
+                    cWind.ShowDialog();
+                });
+                t.SetApartmentState(ApartmentState.STA);
+                t.Start();
+            }
+
+            return MainLists.chosenCards;
+        }
+
+        private static void InitMulligan(List<Card.Cards> choices, Card.CClass opponentClass, Card.CClass ownClass)
+        {
+            List<CardTemplate> choices_BoardCards =
+                            choices.Select(x => new BoardCard(x).ResultingBoardCard).ToList();
+            MainLists.HandCards_BoardCards = choices_BoardCards;
+            MainLists.HandCards_native = choices;
+
+            try
+            {
+                MainLists.currentDeck = Bot.CurrentDeck();
+            }
+            catch //MulliganTester.exe doesnt recognize deck :(
+            {
+                MainLists.currentDeck = new Deck();
+            }
+            AutoUpdateInit.CheckUpdate();
+
+            MainLists.chosenCards = new List<Card.Cards>();
+            MainLists.whiteList = new List<string>();
+            MainLists.blackList = new List<string>();
+            MainLists.OwnClass = ownClass;
+            MainLists.OpponentClass = opponentClass;
+            MainLists.CurrentDeckType = DeckTypeDetector.DeckType.UNKNOWN;
+            //BlackListEntries could get whitelisted if good combo => prefer whitelist > blacklist
+
+            //3+ mana neutral minions are origanizated by the value cuz not listed anywhere
+            int MaxManaCost = ValueReader.MaxManaCost;
+            if ((ownClass == Card.CClass.HUNTER || ownClass == Card.CClass.WARLOCK) &&
+            Bot.CurrentMode() != Bot.Mode.Arena &&
+            Bot.CurrentMode() != Bot.Mode.ArenaAuto)
+            {
+                MaxManaCost = ValueReader.MaxManaCostWarlockAndHunter;
+            }
+            MainLists.MaxManaCost = MaxManaCost;
+        }
+
+        /// <summary>
+        /// If no particular deck type is detected then continue creating the white/blacklists default style
+        /// </summary>
+        private static void CreateDefaultLists()
+        {
             Task t_LoadGeneralWhiteListEntries = Task.Run(() =>
             {
                 LoadGeneralWhiteListEntriesForNeutralMinions();
@@ -66,12 +125,12 @@ namespace HearthstoneMulligan
                 TGT.SetTGT_WhiteAndBlackList();
             });
 
-            /*load obvious whitelist first to determine if Value.InWhiteList in NeutralMinion.cs*/
+            /*load obvious whitelist first*/
             t_LoadGeneralWhiteListEntries.Wait();
             t_Load_TGT_ListEntries.Wait();
 
             #region ListManaging
-            switch (opponentClass)
+            switch (MainLists.OpponentClass)
             {
                 case Card.CClass.DRUID:
                     MainLists.whiteList.Add("EX1_591");//Auchenai Priest
@@ -99,17 +158,17 @@ namespace HearthstoneMulligan
                     break;
             }
 
-            switch (ownClass)
+            switch (MainLists.OwnClass)
             {
                 case Card.CClass.DRUID:
                     MainLists.blackList.Add("CS2_012");//Swipe
-                    if (choices_BoardCards.Count(x => x.Type == Card.CType.MINION) >= 2)
+                    if (MainLists.HandCards_BoardCards.Count(x => x.Type == Card.CType.MINION) >= 2)
                         MainLists.blackList.Add("CS2_011");//Savage Roar
                     MainLists.whiteList.Add("EX1_169");//Innervate
                     MainLists.whiteList.Add("EX1_154");//Wrath
                     MainLists.whiteList.Add("CS2_005");//Claw
 
-                    if (choices_BoardCards.Any(x => x.Id.ToString() == "EX1_169" /*already in whitelist*/
+                    if (MainLists.HandCards_BoardCards.Any(x => x.Id.ToString() == "EX1_169" /*already in whitelist*/
                         || x.Id.ToString() == "CS2_013"))
                     {
                         MainLists.whiteList.Add("FP1_005");//Shade of Naxxramas
@@ -122,7 +181,7 @@ namespace HearthstoneMulligan
                         MainLists.whiteList.Add("GVG_096");//Piloted Shredder
                     }
 
-                    if (choices_BoardCards.Any(x => x.Id.ToString() == "CS2_005" /*already in whitelist*/))//Claw
+                    if (MainLists.HandCards_BoardCards.Any(x => x.Id.ToString() == "CS2_005" /*already in whitelist*/))//Claw
                     {
                         MainLists.whiteList.Add("EX1_578"); //Savagery
                     }
@@ -141,25 +200,25 @@ namespace HearthstoneMulligan
                     MainLists.blackList.Add("GVG_026");//Feign Death
                     MainLists.blackList.Add("EX1_544");//Flare
 
-                    if (choices_BoardCards.Count(x => x.Type == Card.CType.MINION
+                    if (MainLists.HandCards_BoardCards.Count(x => x.Type == Card.CType.MINION
                                                           && !CardEffects.HasBadEffect(x) && x.Cost <= 3) >= 2)
                     {
                         MainLists.whiteList.Add("EX1_611"); //Freezing Trap
-                        MainLists.whiteList.Add(choices_BoardCards.OrderBy(x => new NeutralMinion(x).CardValue).
+                        MainLists.whiteList.Add(MainLists.HandCards_BoardCards.OrderBy(x => new NeutralMinion(x).thisCardValue).
                             First(x => x.Type == Card.CType.MINION
                                 && !CardEffects.HasBadEffect(x) && x.Cost <= 3).Id.ToString());
                     }
                     else //better get minions
                         MainLists.blackList.Add("EX1_611"); //Freezing Trap                                        
 
-                    if (choices_BoardCards.Count(x => x.Type == Card.CType.MINION
+                    if (MainLists.HandCards_BoardCards.Count(x => x.Type == Card.CType.MINION
                         && x.Race == Card.CRace.BEAST &&
                         !MainLists.blackList.Contains(x.Id.ToString())) >= 3)
                         MainLists.whiteList.Add("DS1_175");//Timber Wolf
                     else
                         MainLists.blackList.Add("DS1_175");//Timber Wolf
 
-                    if (choices_BoardCards.Count > 3)
+                    if (MainLists.HandCards_BoardCards.Count > 3)
                         MainLists.whiteList.Add("EX1_014");//Mukla
                     break;
                 case Card.CClass.MAGE:
@@ -171,11 +230,11 @@ namespace HearthstoneMulligan
                     MainLists.whiteList.Add("NEW1_012");//Mana Wyrm
                     MainLists.whiteList.Add("EX1_277");//Arcane Missiles
 
-                    if (Mage.IsHoldingAllSecretsInHand(choices_BoardCards) && choices_BoardCards.
+                    if (Mage.IsHoldingAllSecretsInHand(MainLists.HandCards_BoardCards) && MainLists.HandCards_BoardCards.
                         Any(x => x.Id.ToString() == "FP1_004"))//Mad Scientist
                     {
                         CardTemplate mostExpensiveHandSecret =
-                            choices_BoardCards.Where(x => x.IsSecret).OrderBy(x => x.Cost).Last();
+                            MainLists.HandCards_BoardCards.Where(x => x.IsSecret).OrderBy(x => x.Cost).Last();
 
                         MainLists.whiteList.Add("FP1_004");//Mad Scientist
                         MainLists.blackList.Add(mostExpensiveHandSecret.Id.ToString());
@@ -195,7 +254,7 @@ namespace HearthstoneMulligan
                     MainLists.whiteList.Add("EX1_136");//Redemption
                     MainLists.whiteList.Add("FP1_020");//Avenges
 
-                    if (opponentClass == Card.CClass.DRUID || opponentClass == Card.CClass.WARLOCK)
+                    if (MainLists.OpponentClass == Card.CClass.DRUID || MainLists.OpponentClass == Card.CClass.WARLOCK)
                         MainLists.whiteList.Add("GVG_101");//Scarlet Purifier
                     break;
                 case Card.CClass.PRIEST:
@@ -210,30 +269,30 @@ namespace HearthstoneMulligan
                     MainLists.whiteList.Add("CS1_129");//Inner Fire
                     MainLists.whiteList.Add("CS2_181");//Injured Blademaster
 
-                    if (choices_BoardCards.Any(x => x.Type == Card.CType.MINION
+                    if (MainLists.HandCards_BoardCards.Any(x => x.Type == Card.CType.MINION
                         && x.Cost <= 3 && !MainLists.blackList.Contains(x.Id.ToString())))
                         MainLists.whiteList.Add("CS2_236");//Divine Spirit
                     else
                         MainLists.blackList.Add("CS2_236");//Divine Spirit
-                    if (choices_BoardCards.Any(x => x.Id.ToString() == "CS2_181"))
+                    if (MainLists.HandCards_BoardCards.Any(x => x.Id.ToString() == "CS2_181"))
                         MainLists.whiteList.Add("EX1_621"); // Circle of Healing
                     else
                         MainLists.blackList.Add("EX1_621");
 
-                    if (choices_BoardCards.Count > 3)
+                    if (MainLists.HandCards_BoardCards.Count > 3)
                     {
-                        if (choices_BoardCards.Any(x => x.Id.ToString() == "CS2_235"))//Northshire Cleric
+                        if (MainLists.HandCards_BoardCards.Any(x => x.Id.ToString() == "CS2_235"))//Northshire Cleric
                             MainLists.whiteList.Add("CS2_004");//Power Word: Shield
-                        if (choices_BoardCards.Any(x => x.Id.ToString() == "CS2_181"))//Injured Blademaster	
+                        if (MainLists.HandCards_BoardCards.Any(x => x.Id.ToString() == "CS2_181"))//Injured Blademaster	
                             MainLists.whiteList.Add("EX1_621");//Circle of Healing
                     }
 
-                    if (opponentClass == Card.CClass.WARRIOR || opponentClass == Card.CClass.PALADIN)
+                    if (MainLists.OpponentClass == Card.CClass.WARRIOR || MainLists.OpponentClass == Card.CClass.PALADIN)
                         MainLists.whiteList.Add("EX1_588");
                     else
                         MainLists.blackList.Add("EX1_588");
 
-                    if (choices_BoardCards.Count(c => c.Id.ToString() == "FP1_001" || c.Id.ToString() == "CS2_235" /*already in whitelist*/
+                    if (MainLists.HandCards_BoardCards.Count(c => c.Id.ToString() == "FP1_001" || c.Id.ToString() == "CS2_235" /*already in whitelist*/
                         || c.Id.ToString() == "GVG_081" /*already in whitelist*/ ) > 1)
                     {
                         MainLists.whiteList.Add("FP1_001");
@@ -255,15 +314,15 @@ namespace HearthstoneMulligan
                     MainLists.whiteList.Add("EX1_129"); //Dolchfächer
                     MainLists.whiteList.Add("EX1_126"); //Verrat
 
-                    if (choices_BoardCards.Any(x => x.Cost <= 1
+                    if (MainLists.HandCards_BoardCards.Any(x => x.Cost <= 1
                                                         &&
                                                         (x.Type == Card.CType.SPELL || x.Type == Card.CType.WEAPON)
                                                         &&
                                                         !CardEffects.HasBadEffect(x)) &&
-                        choices_BoardCards.All(x => x.Id.ToString() != "EX1_131")) //got no Defias Ringleader
+                        MainLists.HandCards_BoardCards.All(x => x.Id.ToString() != "EX1_131")) //got no Defias Ringleader
                     {
                         MainLists.whiteList.Add("EX1_134"); //SI:7-Agent
-                        var theOtherCard = choices_BoardCards.First(x => x.Cost <= 1
+                        var theOtherCard = MainLists.HandCards_BoardCards.First(x => x.Cost <= 1
                                                                              &&
                                                                              (x.Type == Card.CType.SPELL ||
                                                                               x.Type == Card.CType.WEAPON)
@@ -272,14 +331,14 @@ namespace HearthstoneMulligan
                         MainLists.whiteList.Add(theOtherCard.Id.ToString());
                     }
                     //dont force adding to blacklist
-                    else if (choices_BoardCards.Any(x => x.Cost <= 1
+                    else if (MainLists.HandCards_BoardCards.Any(x => x.Cost <= 1
                                                              &&
                                                              (x.Type == Card.CType.SPELL || x.Type == Card.CType.WEAPON)
                                                              &&
                                                              !CardEffects.HasBadEffect(x)) &&
-                             choices_BoardCards.Any(x => x.Id.ToString() == "EX1_131")) //got Defias Ringleader
+                             MainLists.HandCards_BoardCards.Any(x => x.Id.ToString() == "EX1_131")) //got Defias Ringleader
                     {
-                        var theOtherCard = choices_BoardCards.First(x => x.Cost <= 1
+                        var theOtherCard = MainLists.HandCards_BoardCards.First(x => x.Cost <= 1
                                                                              &&
                                                                              (x.Type == Card.CType.SPELL ||
                                                                               x.Type == Card.CType.WEAPON)
@@ -288,7 +347,7 @@ namespace HearthstoneMulligan
                         MainLists.whiteList.Add(theOtherCard.Id.ToString());
                     }
 
-                    if (choices_BoardCards.Any(x => x.Cost <= 1 && (x.Type == Card.CType.SPELL
+                    if (MainLists.HandCards_BoardCards.Any(x => x.Cost <= 1 && (x.Type == Card.CType.SPELL
                         || x.Type == Card.CType.WEAPON)))
                         MainLists.whiteList.Add("EX1_131"); //Rädelsführer der Defias
                     break;
@@ -330,11 +389,11 @@ namespace HearthstoneMulligan
                 case Card.CClass.WARRIOR:
                     MainLists.whiteList.Add("EX1_604");//Frothing Berserker
 
-                    if (choices_BoardCards.Any(x => x.Type == Card.CType.MINION && !CardEffects.HasBadEffect(x) &&
+                    if (MainLists.HandCards_BoardCards.Any(x => x.Type == Card.CType.MINION && !CardEffects.HasBadEffect(x) &&
                                                         x.Cost <= 3))
                     {
                         MainLists.whiteList.Add("EX1_402"); //Armorsmith
-                        MainLists.blackList.Add(choices_BoardCards.OrderBy(x => new NeutralMinion(x).CardValue).
+                        MainLists.blackList.Add(MainLists.HandCards_BoardCards.OrderBy(x => new NeutralMinion(x).thisCardValue).
                             First(x => x.Type == Card.CType.MINION &&
                             !CardEffects.HasBadEffect(x) &&
                                     x.Cost <= 3).Id.ToString());
@@ -343,12 +402,12 @@ namespace HearthstoneMulligan
                         MainLists.blackList.Add("EX1_402"); //Armorsmith
 
                     //INNER RAGE
-                    if (choices_BoardCards.Any(x => x.Type == Card.CType.MINION &&
+                    if (MainLists.HandCards_BoardCards.Any(x => x.Type == Card.CType.MINION &&
                         x.Health > 1 && !CardEffects.HasBadEffect(x) && x.Cost <= 3))
                         MainLists.whiteList.Add("CS2_104");//Rampage
-                    if (choices_BoardCards.Any(x => x.Id.ToString() == "EX1_607")) //Inner Rage
+                    if (MainLists.HandCards_BoardCards.Any(x => x.Id.ToString() == "EX1_607")) //Inner Rage
                     {
-                        if (choices_BoardCards.Any(x => x.Id.ToString() == "EX1_007" || x.Id.ToString() == "EX1_393" || x.Id.ToString() ==
+                        if (MainLists.HandCards_BoardCards.Any(x => x.Id.ToString() == "EX1_007" || x.Id.ToString() == "EX1_393" || x.Id.ToString() ==
                             "BRM_019" || x.Id.ToString() == "EX1_412"))
                         {
                             MainLists.whiteList.Add("EX1_007"); //Acolyte
@@ -364,9 +423,9 @@ namespace HearthstoneMulligan
                     }
 
                     //WHIRLWIND
-                    if (choices_BoardCards.Any(x => x.Id.ToString() == "EX1_400")) //Whirlwind
+                    if (MainLists.HandCards_BoardCards.Any(x => x.Id.ToString() == "EX1_400")) //Whirlwind
                     {
-                        if (choices_BoardCards.Any(x => x.Id.ToString() == "EX1_007" || x.Id.ToString() == "EX1_393" || x.Id.ToString() ==
+                        if (MainLists.HandCards_BoardCards.Any(x => x.Id.ToString() == "EX1_007" || x.Id.ToString() == "EX1_393" || x.Id.ToString() ==
                             "BRM_019" || x.Id.ToString() == "EX1_412"))
                         {
                             MainLists.whiteList.Add("EX1_007"); //Acolyte
@@ -381,13 +440,13 @@ namespace HearthstoneMulligan
                         }
                     }
 
-                    float averageMana = choices.Aggregate<Card.Cards, float>(0,
+                    float averageMana = MainLists.HandCards_native.Aggregate<Card.Cards, float>(0,
                         (current, card) => current + new BoardCard(card).ResultingBoardCard.Cost);
-                    averageMana = averageMana / choices_BoardCards.Count;
+                    averageMana = averageMana / MainLists.HandCards_BoardCards.Count;
                     if (averageMana < 4f)
                         MainLists.whiteList.Add("GVG_050");//Bouncing Blade
 
-                    switch (opponentClass)
+                    switch (MainLists.OpponentClass)
                     {
                         case Card.CClass.WARLOCK:
                             MainLists.whiteList.Add("EX1_402");//Armorsmith
@@ -418,10 +477,10 @@ namespace HearthstoneMulligan
                     MainLists.whiteList.Add("NEW1_036");//Commanding Shout
                     MainLists.whiteList.Add("CS2_114");//Cleave
                     MainLists.whiteList.Add("GVG_051");//Warbot
-                    if (choices_BoardCards.Any(x => x.Type == Card.CType.WEAPON))
+                    if (MainLists.HandCards_BoardCards.Any(x => x.Type == Card.CType.WEAPON))
                     {
                         MainLists.whiteList.Add("EX1_409"); //Upgrade!
-                        MainLists.whiteList.Add(choices_BoardCards.OrderBy(x => x.Cost).
+                        MainLists.whiteList.Add(MainLists.HandCards_BoardCards.OrderBy(x => x.Cost).
                             First(x => x.Type == Card.CType.WEAPON).Id.ToString());
                     }
                     MainLists.whiteList.Add("EX1_410");//Shield Slam
@@ -430,66 +489,42 @@ namespace HearthstoneMulligan
 
             }
             #endregion ListManaging
-
-
-            //t_LoadGeneralWhiteListEntries +
-            //t_Load_TGT_ListEntries already loaded
-            t_LoadGeneralBlackListEntries.Wait();
-            t_LoadOwnBlackListEntries.Wait();
-            #endregion List Loading
-
-            CalculateMulligan(MaxManaCost);
-            
-            foreach (Task task in taskList)
-            {
-                task.Wait();
-            }
-
-            //DeckCalc
-            CalculateDeckProbabilities();
-
-            if (ValueReader.IsCoachModeEnabled && 
-                File.Exists(Environment.CurrentDirectory + @"\De.TorstenMandelkow.MetroChart.dll"))
-            {
-                Thread t = new Thread(delegate()
-                {
-                    var cWind = new USER_GUI.CoachMode.CoachWindow();
-                    cWind.ShowDialog();
-                });
-                t.SetApartmentState(ApartmentState.STA);
-                t.Start();
-            }
-
-            return MainLists.chosenCards;
         }
 
         private static void CalculateDeckProbabilities()
         {
-            int normalMinionCount = MainLists.HandCards_BoardCards.Count(x => new NeutralMinion(x).BoardCard != null &&
-                NeutralMinion.WouldTakeMinion(x) &&  !MainLists.whiteList.Contains(x.Id.ToString()));
-
-            if (normalMinionCount == 0)
-                return;
-
-            float minProbabilityToReplace = ValueReader.MinProbabilityToReplace;
-
-            DeckCalculation deckCalculation = new DeckCalculation(minProbabilityToReplace);
-            Tuple<int, float> treeResult = deckCalculation.GenerateTreeWhiteListDraw();
-
-            //less medium cards than actually having possible
-            if (treeResult.Item1 /*prospective refused*/ < normalMinionCount)
+            try
             {
-                int deltaReplaceCount = normalMinionCount - treeResult.Item1;
+                int normalMinionCount = MainLists.HandCards_BoardCards.Count(x => new NeutralMinion(x).minionBoardCard != null &&
+                    NeutralMinion.WouldTakeMinion(x) &&  !MainLists.whiteList.Contains(x.Id.ToString()));
 
-                int i = 1;
-                foreach (CardTemplate badCard in MainLists.HandCards_BoardCards.
-                    Where(x => new NeutralMinion(x).BoardCard != null && NeutralMinion.WouldTakeMinion(x) &&
-                        !MainLists.whiteList.Contains(x.Id.ToString())).
-                    OrderBy(x => new NeutralMinion(x).CardValue).TakeWhile(x => i <= deltaReplaceCount))
+                if (normalMinionCount == 0)
+                    return;
+
+                float minProbabilityToReplace = ValueReader.MinProbabilityToReplace;
+
+                ProbabilityCalculation probabilityCalculation = new ProbabilityCalculation();
+                Tuple<int, float> treeResult = probabilityCalculation.GenerateTreeWhiteListDraw();
+
+                //less medium cards than actually having possible
+                if (treeResult.Item1 /*prospective refused*/< normalMinionCount)
                 {
-                    MainLists.chosenCards.Remove(BoardToMulliganCard(badCard));
-                    ++i;
+                    int deltaReplaceCount = normalMinionCount - treeResult.Item1;
+
+                    int i = 1;
+                    foreach (CardTemplate badCard in MainLists.HandCards_BoardCards.
+                        Where(x => new NeutralMinion(x).minionBoardCard != null && NeutralMinion.WouldTakeMinion(x) &&
+                                   !MainLists.whiteList.Contains(x.Id.ToString())).
+                        OrderBy(x => new NeutralMinion(x).thisCardValue).TakeWhile(x => i <= deltaReplaceCount))
+                    {
+                        MainLists.chosenCards.Remove(BoardToMulliganCard(badCard));
+                        ++i;
+                    }
                 }
+            }
+            catch
+            {
+                //Ignored
             }
         }
 
@@ -513,6 +548,7 @@ namespace HearthstoneMulligan
             MainLists.whiteList.Add("CS2_172");//Bloodfen Raptor
             MainLists.whiteList.Add("EX1_012");//Bloodmage Thalnos
             MainLists.whiteList.Add("NEW1_018");//Bloodsail Raider
+
             if (Murloc.IsMurlocDeck)
             {
                 MainLists.blackList.Add("CS2_173"); //Bluegill Warrior
@@ -521,7 +557,6 @@ namespace HearthstoneMulligan
             {
                 MainLists.whiteList.Add("CS2_173"); //Bluegill Warrior
             }
-            MainLists.whiteList.Add("CS2_173"); //Bluegill Warrior
 
             if (HandCards_BoardCards.Count(x => x.Type == Card.CType.MINION && x.Id.ToString() != "EX1_162" && x.Cost <= 2) >= 2)
             {
@@ -570,7 +605,7 @@ namespace HearthstoneMulligan
             if (HandCards_BoardCards.Any(x => x.Type == Card.CType.MINION && x.Cost <= 3 && !CardEffects.HasBadEffect(x)))
             {
                 MainLists.whiteList.Add("NEW1_037"); //Master Swordsmith
-                MainLists.whiteList.Add(HandCards_BoardCards.OrderBy(x => new NeutralMinion(x).CardValue).First(x =>
+                MainLists.whiteList.Add(HandCards_BoardCards.OrderBy(x => new NeutralMinion(x).thisCardValue).First(x =>
                     x.Type == Card.CType.MINION && x.Cost <= 3 && !CardEffects.HasBadEffect(x)).Id.ToString());
             }
             else
@@ -617,7 +652,7 @@ namespace HearthstoneMulligan
             if (HandCards_BoardCards.Any(x => x.Type == Card.CType.MINION && x.Cost <= 3 && !CardEffects.HasBadEffect(x)))
             {
                 MainLists.whiteList.Add("CS2_188"); //Abusive Sergeant
-                MainLists.whiteList.Add(HandCards_BoardCards.OrderBy(x => new NeutralMinion(x).CardValue).First(x => 
+                MainLists.whiteList.Add(HandCards_BoardCards.OrderBy(x => new NeutralMinion(x).thisCardValue).First(x => 
                     x.Type == Card.CType.MINION && x.Cost <= 3 && !CardEffects.HasBadEffect(x)).Id.ToString());               
             }
             //dont force adding to blacklist => calculate minion value later
@@ -628,7 +663,7 @@ namespace HearthstoneMulligan
             if (HandCards_BoardCards.Any(x => x.Race == Card.CRace.MECH && x.Cost <= 3 && !CardEffects.HasBadEffect(x)))
             {
                 MainLists.whiteList.Add("GVG_013"); //Cogmaster
-                MainLists.whiteList.Add(HandCards_BoardCards.OrderBy(x => new NeutralMinion(x).CardValue).First(
+                MainLists.whiteList.Add(HandCards_BoardCards.OrderBy(x => new NeutralMinion(x).thisCardValue).First(
                     x => x.Race == Card.CRace.MECH && 
                 x.Cost <= 3 && !CardEffects.HasBadEffect(x)).Id.ToString());
             }
@@ -670,6 +705,7 @@ namespace HearthstoneMulligan
             MainLists.whiteList.Add("EX1_004");//Young Priestess
             MainLists.whiteList.Add("FP1_001");//Zombie Chow
             MainLists.whiteList.Add("GVG_093");//Target Dummy
+            MainLists.whiteList.Add("EX1_301");//Felguard
         }
 
         private static void LoadOwnBlackListEntries()
@@ -682,16 +718,16 @@ namespace HearthstoneMulligan
                 MainLists.blackList.Add("NEW1_029");//Millhouse
         }
 
-        static List<Task> taskList = new List<Task>();
+        static List<Task> neutralMinionTaskList = new List<Task>();
         private static void CalculateMulligan(int MaxManaCost)
         {
             List<CardTemplate> HandCards_BoardCards = MainLists.HandCards_BoardCards;
 
-            ManageTwins(HandCards_BoardCards);
+            ManageTwins();
 
-            ManageCombos(MaxManaCost);
+            ManageCombos();
 
-            /*main comparison*/
+            /*====================================main comparison===========================================*/
             /*prefers whitelist over blacklist*/
             foreach (CardTemplate card in HandCards_BoardCards.Where(x => !MainLists.chosenCards.Contains(x.Id)))
             {
@@ -700,152 +736,44 @@ namespace HearthstoneMulligan
                 else if (MainLists.blackList.Contains(card.Id.ToString()))
                     // ReSharper disable once RedundantJumpStatement
                     continue;
-                else if (new NeutralMinion(card).BoardCard != null &&
+                else if (new NeutralMinion(card).minionBoardCard != null &&
                          card.Cost <= MaxManaCost)
                 {
                     Task newT = new Task(() => NeutralMinion.ManageNeutralMinion(BoardToMulliganCard(card)));
-                    taskList.Add(newT);
+                    neutralMinionTaskList.Add(newT);
                     newT.Start();
                 }
             }
         }
 
-        private static void ManageTwins(List<CardTemplate> choices_BoardCards)
+        private static void ManageTwins()
         {
-            for (int i = 0; i < choices_BoardCards.Count; i++)
+            var HandCards_BoardCards = MainLists.HandCards_BoardCards;
+
+            for (int i = 0; i < HandCards_BoardCards.Count; i++)
             {
-                for (int j = 0; j < choices_BoardCards.Count; j++)
+                for (int j = 0; j < HandCards_BoardCards.Count; j++)
                 {
-                    if (i != j && choices_BoardCards[i].Id.Equals(choices_BoardCards[j].Id))
-                    {
-                        if (choices_BoardCards[i].Cost < ValueReader.DontAllowTwinsIfManaCostAtLeast &&
-                            ValueReader.AllowTwins)
+                    if (i != j && HandCards_BoardCards[i].Id.Equals(HandCards_BoardCards[j].Id))
+                    {                
+                        if (!ValueReader.AllowTwins ||
+                            HandCards_BoardCards[i].Cost >= ValueReader.DontAllowTwinsIfManaCostAtLeast)
                         {
-                            var toMulliganCard = BoardToMulliganCard(choices_BoardCards[i]);
+                            var toMulliganCard = BoardToMulliganCard(HandCards_BoardCards[i]);
                             if (!MainLists.chosenCards.Contains(toMulliganCard))
                             {
                                 MainLists.chosenCards.Add(toMulliganCard);
                             }
-                            MainLists.blackList.Add(choices_BoardCards[i].Id.ToString());
-                        }
-
-                        if (!ValueReader.AllowTwins ||
-                            choices_BoardCards[i].Cost >= ValueReader.DontAllowTwinsIfManaCostAtLeast)
-                        {
-                            // ReSharper disable once RedundantJumpStatement
-                            continue;
+                            MainLists.blackList.Add(HandCards_BoardCards[i].Id.ToString());
                         }
                     }
                 }
             }
         }
 
-        private static void CaseThree(int maxMana)
-        {
-            List<CardTemplate> HandCards_BoardCards = MainLists.HandCards_BoardCards;
+        
 
-            if (ValueReader.ValueIgnorer.IgnoreValueIf_244_AndCoin &&
-                ValueReader.ValueIgnorer.HandContains224(HandCards_BoardCards) &&
-                !Combos.alreadyFoundOneCombo)
-            {
-                Combos.alreadyFoundOneCombo = true;
-                var best2Drop =
-                        HandCards_BoardCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == 2).
-                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
-                var bestOther2Drop =
-                        HandCards_BoardCards.Where(x => x.Id.ToString() != best2Drop.Id.ToString() &&
-                            new NeutralMinion(x).BoardCard != null && x.Cost == 2).
-                                OrderBy(x => new NeutralMinion(x).CardValue).Last();
-                var best4Drop =
-                        HandCards_BoardCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == 4).
-                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
-
-                var bestDrops = new[] { best2Drop, bestOther2Drop, best4Drop };
-
-                if (ValueReader.ValueIgnorer.OnlyAddIfNoBadEffect && !bestDrops.All(CardEffects.HasBadEffect))
-                {
-                    foreach (var drop in bestDrops.Where(x => !MainLists.chosenCards.Contains(BoardToMulliganCard(x))))
-                    {
-                        MainLists.chosenCards.Add(BoardToMulliganCard(drop));
-                        MainLists.blackList.Add(drop.Id.ToString());
-                    }
-                }
-            }
-        }
-
-        private static void CaseTwo(int maxMana)
-        {
-            List<CardTemplate> HandCards_BoardCards = MainLists.HandCards_BoardCards;
-
-            if (ValueReader.ValueIgnorer.IgnoreValueIf_2234_AndCoin &&
-                ValueReader.ValueIgnorer.HandContains2234(HandCards_BoardCards) &&
-                !Combos.alreadyFoundOneCombo)
-            {
-                Combos.alreadyFoundOneCombo = true;
-                var best2Drop =
-                        HandCards_BoardCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == 2).
-                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
-                var bestOther2Drop =
-                        HandCards_BoardCards.Where(x => x.Id.ToString() != best2Drop.Id.ToString() &&
-                            new NeutralMinion(x).BoardCard != null && x.Cost == 2).
-                                OrderBy(x => new NeutralMinion(x).CardValue).Last();
-                var best3Drop =
-                        HandCards_BoardCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == 3).
-                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
-                var best4Drop =
-                        HandCards_BoardCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == 4).
-                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
-
-                var bestDrops = new[] { best2Drop, bestOther2Drop, best3Drop, best4Drop };
-
-                foreach (var drop in bestDrops.Where(x => !MainLists.chosenCards.Contains(BoardToMulliganCard(x))))
-                {
-                    MainLists.chosenCards.Add(BoardToMulliganCard(drop));
-                    MainLists.blackList.Add(drop.Id.ToString());
-                }
-            }
-        }
-
-        private static void CaseOne(int maxMana)
-        {
-            List<CardTemplate> HandCards_BoardCards = MainLists.HandCards_BoardCards;
-
-            int X_Config_Drop = ValueReader.ValueIgnorer.GetXDrop;
-
-            //card is X drop and hand contains "x - 1 drop" and "x - 2 drop"
-            if (ValueReader.ValueIgnorer.IgnoreValueIfCardIsX_DropEtc
-                &&
-                HandCards_BoardCards.Any(x => new NeutralMinion(x).BoardCard != null && x.Cost == X_Config_Drop)
-                &&
-                HandCards_BoardCards.Any(x => new NeutralMinion(x).BoardCard != null && x.Cost == X_Config_Drop - 1)
-                &&
-                HandCards_BoardCards.Any(x => new NeutralMinion(x).BoardCard != null && x.Cost == X_Config_Drop - 2)
-                && !Combos.alreadyFoundOneCombo)
-            {
-                Combos.alreadyFoundOneCombo = true;
-                //add BEST x - 1 drop and x - 2 drop
-                var bestXDrop =
-                        HandCards_BoardCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == X_Config_Drop).
-                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
-                var bestX_1Drop =
-                        HandCards_BoardCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == X_Config_Drop - 1).
-                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
-                var bestX_2Drop =
-                        HandCards_BoardCards.Where(x => new NeutralMinion(x).BoardCard != null && x.Cost == X_Config_Drop - 2).
-                            OrderBy(x => new NeutralMinion(x).CardValue).Last();
-
-                var bestDrops = new[] { bestXDrop, bestX_1Drop, bestX_2Drop };
-
-
-                foreach (var drop in bestDrops.Where(x => !MainLists.chosenCards.Contains(BoardToMulliganCard(x))))
-                {
-                    MainLists.chosenCards.Add(BoardToMulliganCard(drop));
-                    MainLists.blackList.Add(drop.Id.ToString());
-                }
-            }
-        }
-
-        private static void ManageCombos(int maxMana)
+        private static void ManageCombos()
         {
             #region comboChecks
 
@@ -853,15 +781,15 @@ namespace HearthstoneMulligan
             {
                 if (priorityCase.Key == ValueReader.ValueIgnorer.ComboCase1Priority)
                 {
-                    CaseOne(maxMana);
+                    Combos.CaseOne();
                 }
                 else if (priorityCase.Key == ValueReader.ValueIgnorer.ComboCase2Priority)
                 {
-                    CaseTwo(maxMana);
+                    Combos.CaseTwo();
                 }
                 else if (priorityCase.Key == ValueReader.ValueIgnorer.ComboCase3Priority)
                 {
-                    CaseThree(maxMana);
+                    Combos.CaseThree();
                 }
             }
 
@@ -870,10 +798,19 @@ namespace HearthstoneMulligan
 
         private static void LoadGeneralBlackListEntries(Card.CClass opponentClass, Card.CClass myClass)
         {
-            if (opponentClass != Card.CClass.PALADIN && opponentClass != Card.CClass.HUNTER)
+            if (opponentClass != Card.CClass.WARRIOR && opponentClass != Card.CClass.HUNTER &&
+                opponentClass != Card.CClass.ROGUE)
             {
                 MainLists.blackList.Add("EX1_007");//Acolyte of Pain
             }
+            if (opponentClass != Card.CClass.HUNTER)
+                MainLists.blackList.Add("TU4d_001");//Hemet Nesingwary
+
+            if (opponentClass != Card.CClass.WARLOCK)
+                MainLists.blackList.Add("AT_106");//Light's Champion
+
+            MainLists.blackList.Add("AT_115");//Fencing Coach
+            MainLists.blackList.Add("EX1_304");//Void Terror
             MainLists.blackList.Add("FP1_025");//Reincarnate
             MainLists.blackList.Add("CS2_038");//Ancestral Spirit
 
@@ -908,6 +845,7 @@ namespace HearthstoneMulligan
             MainLists.blackList.Add("EX1_049");//Youthful Brewmaster
             MainLists.blackList.Add("NEW1_025");//Bloodsail Corsair
             MainLists.blackList.Add("CS2_169");//Young Dragonhawk
+            MainLists.blackList.Add("EX1_408");//Mortal Strike
         }
     }
 }

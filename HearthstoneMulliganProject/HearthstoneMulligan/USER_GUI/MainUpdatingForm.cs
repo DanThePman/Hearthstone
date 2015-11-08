@@ -1,18 +1,17 @@
 ﻿using System;
-using HearthstoneMulligan.USER_GUI;
 using MetroFramework.Forms;
 
-namespace HearthstoneMulligan
+namespace HearthstoneMulligan.USER_GUI
 {
     public partial class UpdatingWindow : MetroForm
     {
-        private bool doPopUp = true;
+        private bool doPopUp;
         /// <summary>
         /// 
         /// </summary>
         /// <param name="_doPopUp">Decides if a popup information for updating the main core should
         /// be generated</param>
-        public UpdatingWindow(bool _doPopUp = true)
+        public UpdatingWindow(bool _doPopUp)
         {
             doPopUp = _doPopUp;
             InitializeComponent();
@@ -28,7 +27,7 @@ namespace HearthstoneMulligan
             {
                 const int timeout = 10;
 
-                MetroTaskWindow.ShowTaskWindow("Update - Information", new PopUp(), timeout);
+                MetroTaskWindow.ShowTaskWindow("Update - Information", new PopUp(this), timeout);
             }
         }
     }

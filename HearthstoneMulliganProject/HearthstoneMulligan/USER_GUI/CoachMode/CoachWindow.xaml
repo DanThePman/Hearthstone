@@ -25,7 +25,7 @@
         <ProgressBar x:Name="realProb_procBar" HorizontalAlignment="Left" Height="26" Margin="233,406,0,0" VerticalAlignment="Top" Width="204"/>
         <Label x:Name="realProb_lbl" Content="N/a" HorizontalAlignment="Left" Margin="442,406,0,0" VerticalAlignment="Top" Width="41"/>
         <Label x:Name="replaceCount_info" Content="...by being able to replace N/a cards in hand" HorizontalAlignment="Left" Margin="27,437,0,0" VerticalAlignment="Top"/>
-        <TextBox x:Name="textBox1" HorizontalAlignment="Left" Height="115" Margin="237,468,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="267"/>
+        <TextBox x:Name="textBox1" HorizontalAlignment="Left" Height="115" Margin="237,468,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="267" IsReadOnlyCaretVisible="True"/>
         <Label x:Name="cardsInfo" Content="Cards which would be replaced then:" HorizontalAlignment="Left" Margin="27,507,0,0" VerticalAlignment="Top"/>
     </Grid>
 </controls:MetroWindow>

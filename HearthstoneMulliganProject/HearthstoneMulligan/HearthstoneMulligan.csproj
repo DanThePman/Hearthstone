@@ -39,7 +39,7 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\..\..\SmartBot\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -87,10 +87,12 @@
     <Compile Include="AutoUpdateInit.cs" />
     <Compile Include="BoardCard.cs" />
     <Compile Include="CardEffects.cs" />
+    <Compile Include="MinionValue.cs" />
+    <Compile Include="Specific Mulligans\DeckTypeDetector.cs" />
     <Compile Include="USER_GUI\CoachMode\CoachWindow.xaml.cs">
       <DependentUpon>CoachWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="DeckCalculation.cs" />
+    <Compile Include="ProbabilityCalculation.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -122,11 +124,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="config.txt" />
     <Content Include="LoaderScript\config.txt" />
-    <Content Include="USER_GUI\MulliganCore.txt" />
+    <Content Include="LoaderScript\documentation.txt" />
     <None Include="Resources\HearthStoneUpdate.jpg" />
-    <Resource Include="USER_GUI\HearthStoneUpdate.jpg" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

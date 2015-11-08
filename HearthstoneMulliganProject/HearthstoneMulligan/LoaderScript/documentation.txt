@@ -1,0 +1,12 @@
+﻿General:
+
+	Checking Deck Type
+	else (not found)
+	filtering whitelist/blacklist entries & combos
+
+	sorting unknown neutral minions by value
+	caclulating probability of drawing at least same value card or better
+
+Seperately:
+	Checking for autoupdate
+	Coach mode

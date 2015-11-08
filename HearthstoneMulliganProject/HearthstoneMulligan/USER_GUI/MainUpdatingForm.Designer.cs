@@ -1,4 +1,4 @@
-﻿namespace HearthstoneMulligan
+﻿namespace HearthstoneMulligan.USER_GUI
 {
     partial class UpdatingWindow
     {

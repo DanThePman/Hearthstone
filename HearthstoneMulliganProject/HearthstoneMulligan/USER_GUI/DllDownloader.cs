@@ -17,7 +17,10 @@ namespace HearthstoneMulligan.USER_GUI
         public void DownloadLatestDLL(string url, string hardDiskPathToSafe, bool _isCoreUpdate = true)
         {
             if (currentForm == null)
+            {
+                MessageBox.Show("Current Form is NULL", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
+            }
 
             dllDownloadCompleted = false;
             configFileDownloadCompleted = !_isCoreUpdate;//init with true if no core update

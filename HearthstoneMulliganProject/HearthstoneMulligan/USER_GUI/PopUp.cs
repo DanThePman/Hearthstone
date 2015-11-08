@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
+using HearthstoneMulligan;
 
 namespace HearthstoneMulligan.USER_GUI
 {
@@ -7,7 +8,7 @@ namespace HearthstoneMulligan.USER_GUI
     {
         private bool clickedYes;
         private bool clickedNo;
-        public PopUp()
+        public PopUp(UpdatingWindow updatingFormToUse)
         {
             clickedYes = false;
             clickedNo = false;
@@ -24,8 +25,9 @@ namespace HearthstoneMulligan.USER_GUI
                 }
                 else if (clickedYes)
                 {
-                    new DllDownloader().DownloadLatestDLL("https://github.com/DanThePman/Hearthstone/blob/master/Download/PlaceContentInThe_SmartBot_Folder/HearthstoneMulligan.dll?raw=true",
-                        Environment.CurrentDirectory + @"\HearthstoneMulliganNew.dll");
+                    DllDownloader coreDownloader = new DllDownloader { currentForm = updatingFormToUse };
+                    coreDownloader.DownloadLatestDLL("https://github.com/DanThePman/Hearthstone/blob/master/Download/PlaceContentInThe_SmartBot_Folder/HearthstoneMulligan.dll?raw=true",
+                        Environment.CurrentDirectory + @"\HearthstoneMulliganNew.dll");                    
                 }
             };
         }

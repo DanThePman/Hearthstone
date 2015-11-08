@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using HearthstoneMulligan;
 using SmartBot.Database;
 
 /// <summary>
@@ -111,40 +112,40 @@ public class ValueReader
         get { return Convert.ToInt32(GetStringReadedValue(Lines.MaxManaCostWarlockAndHunter)); }
     }
 
-    public static NeutralMinion.Value MinNeutralMinionValue
+    public static MinionValue.Value MinNeutralMinionValue
     {
         get
         {
             switch (GetStringReadedValue(Lines.MinNeutralMinionValue).ToLower())
             {
                 case "bad":
-                    return NeutralMinion.Value.Bad;
+                    return MinionValue.Value.Bad;
                 case "medium":
-                    return NeutralMinion.Value.Medium;
+                    return MinionValue.Value.Medium;
                 case "good":
-                    return NeutralMinion.Value.Good;
+                    return MinionValue.Value.Good;
                 case "excellent":
-                    return NeutralMinion.Value.Excellent;
+                    return MinionValue.Value.Excellent;
                 default:
-                    return NeutralMinion.Value.Medium;
+                    return MinionValue.Value.Medium;
             }
         }
     }
 
-    public static NeutralMinion.Value IncreasedMinNeutralMinionValue
+    public static MinionValue.Value IncreasedMinNeutralMinionValue
     {
         get
         {
             switch (MinNeutralMinionValue)
             {
-                case NeutralMinion.Value.Bad:
-                    return NeutralMinion.Value.Medium;
-                case NeutralMinion.Value.Medium:
-                    return NeutralMinion.Value.Good;
-                case NeutralMinion.Value.Good:
-                    return NeutralMinion.Value.Excellent;
+                case MinionValue.Value.Bad:
+                    return MinionValue.Value.Medium;
+                case MinionValue.Value.Medium:
+                    return MinionValue.Value.Good;
+                case MinionValue.Value.Good:
+                    return MinionValue.Value.Excellent;
                 default:
-                    return NeutralMinion.Value.Excellent;
+                    return MinionValue.Value.Excellent;
             }
         }
     }
@@ -239,13 +240,13 @@ public class ValueReader
                 return false;
 
             return
-                HandCards.Count(x => new NeutralMinion(x).BoardCard != null &&
+                HandCards.Count(x => new NeutralMinion(x).minionBoardCard != null &&
                     x.Cost == 2) >= 2
                 &&
-                HandCards.Any(x => new NeutralMinion(x).BoardCard != null &&
+                HandCards.Any(x => new NeutralMinion(x).minionBoardCard != null &&
                     x.Cost == 3)
                 &&
-                HandCards.Any(x => new NeutralMinion(x).BoardCard != null &&
+                HandCards.Any(x => new NeutralMinion(x).minionBoardCard != null &&
                     x.Cost == 4);
         }
 
@@ -255,10 +256,10 @@ public class ValueReader
                 return false;
 
             return
-                HandCards.Count(x => new NeutralMinion(x).BoardCard != null &&
+                HandCards.Count(x => new NeutralMinion(x).minionBoardCard != null &&
                      x.Cost == 2) >= 2
                 &&
-                HandCards.Any(x => new NeutralMinion(x).BoardCard != null &&
+                HandCards.Any(x => new NeutralMinion(x).minionBoardCard != null &&
                      x.Cost == 4);
         }
 
